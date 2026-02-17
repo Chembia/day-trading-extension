@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pattern Analysis Results</title>
+    <link rel="stylesheet" href="../styles/common.css">
+    <link rel="stylesheet" href="results.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-financial@0.1.1/dist/chartjs-chart-financial.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
+</head>
+<body>
+    <div class="results-container">
+        <header class="results-header glass-container">
+            <div class="header-content">
+                <h1 id="stockTitle">Loading...</h1>
+                <p id="dateRange" class="date-range"></p>
+            </div>
+            <div class="header-actions">
+                <button id="newAnalysisBtn" class="glass-button">
+                    New Analysis
+                </button>
+                <button id="downloadBtn" class="glass-button glass-button-secondary">
+                    Download Chart
+                </button>
+            </div>
+        </header>
+        
+        <main class="results-main">
+            <!-- Chart Section -->
+            <section class="chart-section glass-container">
+                <h2>Candlestick Chart with Pattern Annotations</h2>
+                <div class="chart-wrapper">
+                    <canvas id="stockChart"></canvas>
+                </div>
+            </section>
+            
+            <!-- Patterns Summary -->
+            <section class="patterns-section glass-container">
+                <div class="section-header">
+                    <h2>Detected Patterns</h2>
+                    <span id="patternCount" class="pattern-badge">0 patterns</span>
+                </div>
+                
+                <div id="noPatterns" class="no-patterns" style="display: none;">
+                    <p>No patterns found for the selected date range.</p>
+                    <p class="small-text">Try adjusting your date range or selecting a different stock.</p>
+                </div>
+                
+                <div id="patternsTable" class="patterns-table"></div>
+            </section>
+        </main>
+        
+        <!-- Loading Overlay -->
+        <div id="loadingOverlay" class="loading-overlay">
+            <div class="spinner"></div>
+            <div class="loading-text">Processing pattern analysis...</div>
+        </div>
+        
+        <!-- Error Message -->
+        <div id="errorContainer" class="glass-container" style="display: none;">
+            <div class="error-message show">
+                <p id="errorText"></p>
+            </div>
+            <button id="retryBtn" class="glass-button">
+                Return to Analyzer
+            </button>
+        </div>
+    </div>
+    
+    <script src="../scripts/fluey-algorithm.js"></script>
+    <script src="../scripts/pattern-filter.js"></script>
+    <script src="../scripts/chart-generator.js"></script>
+    <script src="results.js"></script>
+</body>
+</html>

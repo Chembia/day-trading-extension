@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Pattern Analyzer</title>
+    <link rel="stylesheet" href="../styles/common.css">
+    <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+    <div class="popup-container">
+        <header class="popup-header">
+            <h1>📈 Stock Pattern Analyzer</h1>
+            <button id="settingsBtn" class="settings-btn" title="Settings">⚙️</button>
+        </header>
+        
+        <div class="glass-container">
+            <div id="errorMessage" class="error-message"></div>
+            
+            <form id="analysisForm">
+                <div class="form-group">
+                    <label for="symbol">Stock Symbol</label>
+                    <input 
+                        type="text" 
+                        id="symbol" 
+                        class="glass-input" 
+                        placeholder="e.g., AAPL, TSLA, SPY"
+                        required
+                        maxlength="10"
+                    >
+                </div>
+                
+                <div class="form-group">
+                    <label for="startDate">Start Date</label>
+                    <input 
+                        type="date" 
+                        id="startDate" 
+                        class="glass-input" 
+                        required
+                    >
+                </div>
+                
+                <div class="form-group">
+                    <label for="endDate">End Date</label>
+                    <input 
+                        type="date" 
+                        id="endDate" 
+                        class="glass-input" 
+                        required
+                    >
+                </div>
+                
+                <button type="submit" id="analyzeBtn" class="glass-button">
+                    Analyze Patterns
+                </button>
+            </form>
+            
+            <div class="info-section">
+                <p class="small-text">
+                    Powered by FLUEY Algorithm • 47 Patterns
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Settings</h2>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="apiKey">Alpha Vantage API Key</label>
+                    <input 
+                        type="text" 
+                        id="apiKey" 
+                        class="glass-input" 
+                        placeholder="Enter your API key"
+                    >
+                    <p class="small-text">
+                        Don't have an API key? Get one free at 
+                        <a href="https://www.alphavantage.co/support/#api-key" target="_blank">
+                            alphavantage.co
+                        </a>
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="cancelBtn" class="glass-button glass-button-secondary">
+                    Cancel
+                </button>
+                <button id="saveApiKeyBtn" class="glass-button">
+                    Save
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay" style="display: none;">
+        <div class="spinner"></div>
+        <div class="loading-text">Analyzing patterns...</div>
+    </div>
+    
+    <script src="../scripts/api-client.js"></script>
+    <script src="popup.js"></script>
+</body>
+</html>
