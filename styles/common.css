@@ -1,10 +1,12 @@
 /* Common Glassmorphism Styles */
 
 :root {
-    --primary-gold: #DEB887;
-    --accent-gold: #D4AF37;
-    --text-dark: #4a4a4a;
-    --text-light: #666;
+    --base-glass: rgba(0, 0, 0, 0.1);
+    --highlight-gray: #B6B6B6;
+    --accent-aqua: #D0FAF9;
+    --accent-milky: #FFFFF3;
+    --text-primary: #2C2C2C;
+    --text-secondary: #6B6B6B;
     --success-green: rgba(34, 197, 94, 0.3);
     --error-red: rgba(239, 68, 68, 0.3);
     --warning-amber: rgba(251, 191, 36, 0.3);
@@ -18,66 +20,70 @@
 
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(135deg, #f5f3ef, #e8dcc8);
-    color: var(--text-dark);
+    background: linear-gradient(135deg, #FFFFF3, #f5f5f5);
+    color: var(--text-primary);
     line-height: 1.6;
 }
 
 /* Glass Container */
 .glass-container {
-    background: rgba(222, 184, 135, 0.15);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(222, 184, 135, 0.3);
+    background: rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: 1px solid rgba(182, 182, 182, 0.2);
     border-radius: 20px;
-    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.08);
     padding: 24px;
 }
 
 /* Glass Input Fields */
 .glass-input {
-    background: rgba(255, 255, 255, 0.25);
-    backdrop-filter: blur(8px);
-    border: 1.5px solid rgba(222, 184, 135, 0.4);
+    background: rgba(208, 250, 249, 0.15);
+    backdrop-filter: blur(10px);
+    border: 1.5px solid rgba(182, 182, 182, 0.3);
     border-radius: 10px;
     padding: 12px 16px;
-    color: var(--text-dark);
+    color: var(--text-primary);
     font-size: 14px;
     transition: all 0.3s ease;
     width: 100%;
 }
 
 .glass-input:focus {
-    border-color: rgba(212, 175, 55, 0.7);
-    background: rgba(255, 255, 255, 0.35);
+    border-color: rgba(208, 250, 249, 0.6);
+    background: rgba(208, 250, 249, 0.25);
     outline: none;
-    box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
+    box-shadow: 0 0 0 3px rgba(208, 250, 249, 0.15);
 }
 
 .glass-input::placeholder {
-    color: rgba(74, 74, 74, 0.5);
+    color: rgba(44, 44, 44, 0.5);
 }
 
 /* Glass Button */
 .glass-button {
-    background: linear-gradient(135deg, rgba(212, 175, 55, 0.7), rgba(222, 184, 135, 0.7));
-    backdrop-filter: blur(10px);
-    border: none;
-    color: white;
+    background: linear-gradient(135deg, rgba(208, 250, 249, 0.5), rgba(182, 182, 182, 0.3));
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(182, 182, 182, 0.3);
+    color: var(--text-primary);
     padding: 14px 28px;
     border-radius: 12px;
     font-weight: 600;
     font-size: 15px;
     cursor: pointer;
     transition: all 0.3s ease;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    box-shadow: 
+        0 4px 16px rgba(0, 0, 0, 0.1),
+        inset 0 1px 2px rgba(182, 182, 182, 0.3);
     width: 100%;
 }
 
 .glass-button:hover {
-    background: linear-gradient(135deg, rgba(212, 175, 55, 0.85), rgba(222, 184, 135, 0.85));
+    background: linear-gradient(135deg, rgba(208, 250, 249, 0.7), rgba(182, 182, 182, 0.4));
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(212, 175, 55, 0.35);
+    box-shadow: 
+        0 6px 24px rgba(0, 0, 0, 0.12),
+        inset 0 1px 2px rgba(182, 182, 182, 0.4);
 }
 
 .glass-button:active {
@@ -94,11 +100,11 @@ body {
 .glass-card {
     background: rgba(255, 255, 255, 0.2);
     backdrop-filter: blur(10px);
-    border: 1px solid rgba(222, 184, 135, 0.25);
+    border: 1px solid rgba(182, 182, 182, 0.25);
     border-radius: 15px;
     padding: 20px;
     margin-bottom: 16px;
-    box-shadow: 0 4px 16px 0 rgba(31, 38, 135, 0.08);
+    box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.08);
 }
 
 /* Form Group */
@@ -110,19 +116,20 @@ body {
     display: block;
     margin-bottom: 8px;
     font-weight: 500;
-    color: var(--text-dark);
+    color: var(--text-primary);
     font-size: 14px;
 }
 
 /* Loading Spinner */
 .spinner {
-    border: 3px solid rgba(222, 184, 135, 0.3);
-    border-top: 3px solid var(--accent-gold);
+    border: 3px solid rgba(208, 250, 249, 0.3);
+    border-top: 3px solid var(--accent-aqua);
     border-radius: 50%;
     width: 40px;
     height: 40px;
     animation: spin 1s linear infinite;
     margin: 20px auto;
+    box-shadow: 0 0 10px rgba(208, 250, 249, 0.3);
 }
 
 @keyframes spin {
@@ -154,8 +161,8 @@ body {
 
 /* Error Message */
 .error-message {
-    background: rgba(239, 68, 68, 0.2);
-    border: 1px solid rgba(239, 68, 68, 0.4);
+    background: rgba(255, 100, 100, 0.15);
+    border: 1px solid rgba(255, 100, 100, 0.3);
     border-radius: 10px;
     padding: 12px 16px;
     color: #dc2626;
@@ -198,13 +205,14 @@ body {
 }
 
 .modal-content {
-    background: linear-gradient(135deg, #f5f3ef, #e8dcc8);
-    backdrop-filter: blur(12px);
+    background: linear-gradient(135deg, #FFFFF3, #f5f5f5);
+    backdrop-filter: blur(15px);
     border-radius: 20px;
     padding: 32px;
     max-width: 500px;
     width: 90%;
     box-shadow: 0 12px 48px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(182, 182, 182, 0.2);
 }
 
 .modal-header {
@@ -212,7 +220,7 @@ body {
 }
 
 .modal-header h2 {
-    color: var(--text-dark);
+    color: var(--text-primary);
     font-size: 24px;
     margin-bottom: 8px;
 }
@@ -233,29 +241,29 @@ body {
 
 /* Secondary Button */
 .glass-button-secondary {
-    background: rgba(128, 128, 128, 0.2);
-    color: var(--text-dark);
+    background: rgba(182, 182, 182, 0.2);
+    color: var(--text-primary);
 }
 
 .glass-button-secondary:hover {
-    background: rgba(128, 128, 128, 0.3);
+    background: rgba(182, 182, 182, 0.3);
 }
 
 /* Small Text */
 .small-text {
     font-size: 12px;
-    color: var(--text-light);
+    color: var(--text-secondary);
     margin-top: 8px;
 }
 
 /* Link */
 a {
-    color: var(--accent-gold);
+    color: var(--accent-aqua);
     text-decoration: none;
     transition: color 0.3s ease;
 }
 
 a:hover {
-    color: var(--primary-gold);
+    color: #A0E8E7;
     text-decoration: underline;
 }
