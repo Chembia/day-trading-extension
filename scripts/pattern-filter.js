@@ -70,6 +70,9 @@ function calculatePatternConfidence(patternName, features, patternCandles) {
 function filterPatterns(patternResults, features, df) {
     const filteredPatterns = [];
     
+    // Get PATTERNS array from global scope
+    const patternsList = (typeof window !== 'undefined' && window.PATTERNS) ? window.PATTERNS : [];
+    
     // Convert results to array format with confidence scores
     for (const [index, patterns] of Object.entries(patternResults)) {
         const idx = parseInt(index);
@@ -77,7 +80,7 @@ function filterPatterns(patternResults, features, df) {
         for (const [patternId, patternName] of Object.entries(patterns)) {
             // Find pattern candle count
             let patternCandles = 1;
-            for (const p of window.PATTERNS || []) {
+            for (const p of patternsList) {
                 if (p.id === parseInt(patternId)) {
                     patternCandles = p.candles;
                     break;
@@ -157,6 +160,14 @@ function getSuggestedAction(patternType, confidence) {
         default:
             return "Hold";
     }
+}
+
+// Make functions available globally for browser usage
+if (typeof window !== 'undefined') {
+    window.calculatePatternConfidence = calculatePatternConfidence;
+    window.filterPatterns = filterPatterns;
+    window.determinePatternType = determinePatternType;
+    window.getSuggestedAction = getSuggestedAction;
 }
 
 // Export for use in other modules

@@ -225,6 +225,13 @@ function scanPatterns(df) {
     return results;
 }
 
+// Make available globally for browser usage
+if (typeof window !== 'undefined') {
+    window.scanPatterns = scanPatterns;
+    window.buildFeatureMatrix = buildFeatureMatrix;
+    window.PATTERNS = PATTERNS;
+}
+
 // Export for use in other modules
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {

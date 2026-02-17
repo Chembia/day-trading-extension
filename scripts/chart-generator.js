@@ -3,10 +3,9 @@
 function createCandlestickChart(canvasId, stockData, patterns) {
     const ctx = document.getElementById(canvasId).getContext('2d');
     
-    // Prepare data for Chart.js
-    const labels = stockData.map(d => d.Date);
-    const candlestickData = stockData.map(d => ({
-        x: d.Date,
+    // Prepare data for Chart.js candlestick
+    const candlestickData = stockData.map((d, i) => ({
+        x: i,
         o: d.Open,
         h: d.High,
         l: d.Low,
@@ -19,20 +18,9 @@ function createCandlestickChart(canvasId, stockData, patterns) {
     const config = {
         type: 'candlestick',
         data: {
-            labels: labels,
             datasets: [{
                 label: 'Stock Price',
-                data: candlestickData,
-                color: {
-                    up: '#22c55e',
-                    down: '#ef4444',
-                    unchanged: '#94a3b8'
-                },
-                borderColor: {
-                    up: '#16a34a',
-                    down: '#dc2626',
-                    unchanged: '#64748b'
-                }
+                data: candlestickData
             }]
         },
         options: {
@@ -51,6 +39,10 @@ function createCandlestickChart(canvasId, stockData, patterns) {
                     mode: 'index',
                     intersect: false,
                     callbacks: {
+                        title: function(context) {
+                            const index = context[0].dataIndex;
+                            return stockData[index].Date;
+                        },
                         label: function(context) {
                             const point = context.raw;
                             return [
@@ -68,11 +60,18 @@ function createCandlestickChart(canvasId, stockData, patterns) {
             },
             scales: {
                 x: {
-                    type: 'category',
+                    type: 'linear',
                     grid: {
                         color: 'rgba(222, 184, 135, 0.1)'
                     },
                     ticks: {
+                        callback: function(value, index) {
+                            if (stockData[Math.floor(value)]) {
+                                const date = stockData[Math.floor(value)].Date;
+                                return date.substring(5); // Show MM-DD
+                            }
+                            return '';
+                        },
                         maxRotation: 45,
                         minRotation: 45,
                         autoSkip: true,
@@ -106,9 +105,6 @@ function createPatternAnnotations(patterns, stockData) {
         const startIdx = Math.max(0, pattern.index - pattern.candles + 1);
         const endIdx = pattern.index;
         
-        const startDate = stockData[startIdx].Date;
-        const endDate = stockData[endIdx].Date;
-        
         // Get price range for the pattern
         let minPrice = Infinity;
         let maxPrice = -Infinity;
@@ -123,33 +119,36 @@ function createPatternAnnotations(patterns, stockData) {
         maxPrice += padding;
         
         // Determine box color based on pattern type
-        let boxColor;
+        let boxColor, borderColor;
         switch (pattern.type) {
             case 'bullish':
-                boxColor = 'rgba(34, 197, 94, 0.3)';
+                boxColor = 'rgba(34, 197, 94, 0.2)';
+                borderColor = 'rgba(34, 197, 94, 0.6)';
                 break;
             case 'bearish':
-                boxColor = 'rgba(239, 68, 68, 0.3)';
+                boxColor = 'rgba(239, 68, 68, 0.2)';
+                borderColor = 'rgba(239, 68, 68, 0.6)';
                 break;
             default:
-                boxColor = 'rgba(251, 191, 36, 0.3)';
+                boxColor = 'rgba(251, 191, 36, 0.2)';
+                borderColor = 'rgba(251, 191, 36, 0.6)';
         }
         
         // Create box annotation
         annotations[`box_${idx}`] = {
             type: 'box',
-            xMin: startDate,
-            xMax: endDate,
+            xMin: startIdx - 0.5,
+            xMax: endIdx + 0.5,
             yMin: minPrice,
             yMax: maxPrice,
             backgroundColor: boxColor,
-            borderColor: boxColor.replace('0.3', '0.6'),
+            borderColor: borderColor,
             borderWidth: 2,
             label: {
                 display: true,
                 content: `${pattern.patternName} (${pattern.confidence}%)`,
-                position: 'top',
-                backgroundColor: boxColor.replace('0.3', '0.8'),
+                position: 'start',
+                backgroundColor: borderColor,
                 color: 'white',
                 font: {
                     size: 10,
@@ -171,6 +170,12 @@ function downloadChart(chartId, filename) {
     link.download = filename;
     link.href = url;
     link.click();
+}
+
+// Make functions available globally for browser usage
+if (typeof window !== 'undefined') {
+    window.createCandlestickChart = createCandlestickChart;
+    window.downloadChart = downloadChart;
 }
 
 // Export for use in other modules

@@ -192,6 +192,14 @@ function getErrorMessage(errorCode) {
     return messages[errorCode] || "An unknown error occurred.";
 }
 
+// Make functions available globally for browser usage
+if (typeof window !== 'undefined') {
+    window.getApiKey = getApiKey;
+    window.saveApiKey = saveApiKey;
+    window.getStockData = getStockData;
+    window.getErrorMessage = getErrorMessage;
+}
+
 // Export for use in other modules
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
