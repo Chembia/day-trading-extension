@@ -1,0 +1,80 @@
+/* Popup Specific Styles */
+
+body {
+    width: 400px;
+    min-height: 500px;
+    margin: 0;
+    padding: 0;
+}
+
+.popup-container {
+    padding: 20px;
+}
+
+.popup-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.popup-header h1 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-dark);
+    margin: 0;
+}
+
+.settings-btn {
+    background: rgba(255, 255, 255, 0.3);
+    border: 1px solid rgba(222, 184, 135, 0.3);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 18px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.settings-btn:hover {
+    background: rgba(255, 255, 255, 0.5);
+    transform: scale(1.1);
+}
+
+.info-section {
+    margin-top: 20px;
+    text-align: center;
+}
+
+/* Date inputs styling */
+input[type="date"] {
+    cursor: pointer;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    filter: opacity(0.6);
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator:hover {
+    filter: opacity(1);
+}
+
+/* Form styling */
+#analysisForm {
+    margin-bottom: 0;
+}
+
+/* Responsive adjustments */
+@media (max-height: 600px) {
+    .popup-container {
+        padding: 16px;
+    }
+    
+    .glass-container {
+        padding: 20px;
+    }
+    
+    .form-group {
+        margin-bottom: 16px;
+    }
+}
