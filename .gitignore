@@ -43,3 +43,6 @@ venv/
 
 # SVG temporary files
 *.svg
+
+# Test files
+test-*.html
