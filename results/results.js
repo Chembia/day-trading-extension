@@ -16,6 +16,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     let chart = null;
     
+    // Shared timestamp formatting function
+    const formatTimestamp = (dateString) => {
+        const date = new Date(dateString);
+        return date.toLocaleString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric',
+            hour: 'numeric',
+            minute: '2-digit',
+            hour12: true
+        });
+    };
+    
     // Load and process data
     try {
         // Get analysis data from storage
@@ -30,7 +43,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         // Update header
         stockTitle.textContent = `${symbol} - Pattern Analysis`;
-        dateRange.textContent = `${startDate} to ${endDate}`;
+        dateRange.textContent = `${formatTimestamp(startDate)} to ${formatTimestamp(endDate)}`;
         
         // Run FLUEY algorithm
         const patternResults = scanPatterns(data);
@@ -71,10 +84,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             row.className = 'pattern-row';
             
             const action = getSuggestedAction(pattern.type, pattern.confidence);
+            const formattedDate = formatTimestamp(pattern.date);
             
             row.innerHTML = `
                 <div class="pattern-name">${pattern.patternName}</div>
-                <div class="pattern-date">${pattern.date}</div>
+                <div class="pattern-date">${formattedDate}</div>
                 <div class="pattern-confidence">
                     <div class="confidence-bar">
                         <div class="confidence-fill" style="width: ${pattern.confidence}%"></div>

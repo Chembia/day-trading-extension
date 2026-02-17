@@ -17,13 +17,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     const saveApiKeyBtn = document.getElementById('saveApiKeyBtn');
     const cancelBtn = document.getElementById('cancelBtn');
     
-    // Set default dates (last 30 days)
+    // Set default dates (last 30 days with current time)
     const today = new Date();
     const thirtyDaysAgo = new Date(today);
     thirtyDaysAgo.setDate(today.getDate() - 30);
     
-    endDateInput.value = today.toISOString().split('T')[0];
-    startDateInput.value = thirtyDaysAgo.toISOString().split('T')[0];
+    endDateInput.value = today.toISOString().slice(0, 16);
+    startDateInput.value = thirtyDaysAgo.toISOString().slice(0, 16);
     
     // Check if API key is configured
     checkApiKey();
