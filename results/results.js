@@ -16,6 +16,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     let chart = null;
     
+    // Shared timestamp formatting function
+    const formatTimestamp = (dateString) => {
+        const date = new Date(dateString);
+        return date.toLocaleString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric',
+            hour: 'numeric',
+            minute: '2-digit',
+            hour12: true
+        });
+    };
+    
     // Load and process data
     try {
         // Get analysis data from storage
@@ -27,19 +40,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
         
         const { symbol, startDate, endDate, data } = analysis;
-        
-        // Format timestamps for display
-        const formatTimestamp = (dateString) => {
-            const date = new Date(dateString);
-            return date.toLocaleString('en-US', {
-                month: 'short',
-                day: 'numeric',
-                year: 'numeric',
-                hour: 'numeric',
-                minute: '2-digit',
-                hour12: true
-            });
-        };
         
         // Update header
         stockTitle.textContent = `${symbol} - Pattern Analysis`;
@@ -79,25 +79,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     function displayPatterns(patterns) {
         patternsTable.innerHTML = '';
         
-        // Helper function to format pattern date
-        const formatPatternDate = (dateString) => {
-            const date = new Date(dateString);
-            return date.toLocaleString('en-US', {
-                month: 'short',
-                day: 'numeric',
-                year: 'numeric',
-                hour: 'numeric',
-                minute: '2-digit',
-                hour12: true
-            });
-        };
-        
         patterns.forEach((pattern) => {
             const row = document.createElement('div');
             row.className = 'pattern-row';
             
             const action = getSuggestedAction(pattern.type, pattern.confidence);
-            const formattedDate = formatPatternDate(pattern.date);
+            const formattedDate = formatTimestamp(pattern.date);
             
             row.innerHTML = `
                 <div class="pattern-name">${pattern.patternName}</div>
