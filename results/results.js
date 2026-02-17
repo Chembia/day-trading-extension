@@ -28,9 +28,22 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         const { symbol, startDate, endDate, data } = analysis;
         
+        // Format timestamps for display
+        const formatTimestamp = (dateString) => {
+            const date = new Date(dateString);
+            return date.toLocaleString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric',
+                hour: 'numeric',
+                minute: '2-digit',
+                hour12: true
+            });
+        };
+        
         // Update header
         stockTitle.textContent = `${symbol} - Pattern Analysis`;
-        dateRange.textContent = `${startDate} to ${endDate}`;
+        dateRange.textContent = `${formatTimestamp(startDate)} to ${formatTimestamp(endDate)}`;
         
         // Run FLUEY algorithm
         const patternResults = scanPatterns(data);
@@ -66,15 +79,29 @@ document.addEventListener('DOMContentLoaded', async () => {
     function displayPatterns(patterns) {
         patternsTable.innerHTML = '';
         
+        // Helper function to format pattern date
+        const formatPatternDate = (dateString) => {
+            const date = new Date(dateString);
+            return date.toLocaleString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric',
+                hour: 'numeric',
+                minute: '2-digit',
+                hour12: true
+            });
+        };
+        
         patterns.forEach((pattern) => {
             const row = document.createElement('div');
             row.className = 'pattern-row';
             
             const action = getSuggestedAction(pattern.type, pattern.confidence);
+            const formattedDate = formatPatternDate(pattern.date);
             
             row.innerHTML = `
                 <div class="pattern-name">${pattern.patternName}</div>
-                <div class="pattern-date">${pattern.date}</div>
+                <div class="pattern-date">${formattedDate}</div>
                 <div class="pattern-confidence">
                     <div class="confidence-bar">
                         <div class="confidence-fill" style="width: ${pattern.confidence}%"></div>

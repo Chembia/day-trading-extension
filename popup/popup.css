@@ -45,17 +45,20 @@ body {
     text-align: center;
 }
 
-/* Date inputs styling */
-input[type="date"] {
+/* Date and datetime inputs styling */
+input[type="date"],
+input[type="datetime-local"] {
     cursor: pointer;
 }
 
-input[type="date"]::-webkit-calendar-picker-indicator {
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="datetime-local"]::-webkit-calendar-picker-indicator {
     cursor: pointer;
     filter: opacity(0.6);
 }
 
-input[type="date"]::-webkit-calendar-picker-indicator:hover {
+input[type="date"]::-webkit-calendar-picker-indicator:hover,
+input[type="datetime-local"]::-webkit-calendar-picker-indicator:hover {
     filter: opacity(1);
 }
 
