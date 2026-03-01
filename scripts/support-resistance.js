@@ -57,15 +57,17 @@ function detectSupportResistance(priceData, config = {}) {
         // Weight recent touches higher
         const maxIdx = priceData.length - 1;
         let weightedTouches = group.reduce((sum, p) => sum + (p.index / maxIdx) * 2 + 1, 0);
-        // Strength 1-10 based on touches and recency weight
-        const strength = Math.min(10, Math.max(1, Math.round(weightedTouches / group.length * touches / 2)));
+        // Strength 1-10: average recency weight per touch (1-3) scaled by touch count / 2
+        // More touches and more recent activity yields higher strength
+        const avgRecency = weightedTouches / group.length; // 1–3 range
+        const strength = Math.min(10, Math.max(1, Math.round(avgRecency * touches / 2)));
         // Determine type by majority
         const supportCount = group.filter(p => p.type === 'support').length;
         const type = supportCount >= group.length / 2 ? 'support' : 'resistance';
         // Sort by date
         const sorted = group.slice().sort((a, b) => a.index - b.index);
         return {
-            id: `sr_${Date.now()}_${idx}`,
+            id: `sr_${Date.now()}_${idx}_${Math.floor(Math.random() * 10000)}`,
             type,
             price: parseFloat(avgPrice.toFixed(4)),
             strength,
