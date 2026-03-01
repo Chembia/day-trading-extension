@@ -482,7 +482,18 @@ body {
 /* Dark Mode */
 [data-theme="dark"] body {
     background: linear-gradient(135deg, #1a1a1a, #121212);
-    color: #e0e0e0;
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .notebook-card,
+[data-theme="dark"] .image-card {
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .notebook-card-name,
+[data-theme="dark"] .image-card-symbol,
+[data-theme="dark"] .image-metadata {
+    color: var(--text-primary);
 }
 
 [data-theme="dark"] .glass-container,
@@ -495,7 +506,7 @@ body {
 [data-theme="dark"] .glass-input {
     background: rgba(255, 255, 255, 0.05);
     border-color: rgba(255, 255, 255, 0.15);
-    color: #e0e0e0;
+    color: var(--text-primary);
 }
 
 [data-theme="dark"] .modal-content {

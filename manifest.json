@@ -5,7 +5,8 @@
   "description": "Identify candlestick patterns using FLUEY algorithm",
   "permissions": ["storage", "tabs"],
   "host_permissions": [
-    "https://api.twelvedata.com/*"
+    "https://api.twelvedata.com/*",
+    "https://query1.finance.yahoo.com/*"
   ],
   "content_security_policy": {
     "extension_pages": "script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; object-src 'self'"

@@ -288,6 +288,17 @@ a:hover {
     display: flex !important;
 }
 
+/* Dark Mode Base */
+[data-theme="dark"] {
+    --text-primary: #FFF8DC;
+    --text-secondary: #F5E6D3;
+    --text-muted: #D4C5B0;
+}
+
+[data-theme="dark"] body {
+    color: var(--text-primary);
+}
+
 /* State classes for dynamic styling */
 .success-state {
     background: rgba(34, 197, 94, 0.2) !important;

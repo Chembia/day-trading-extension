@@ -743,28 +743,62 @@ body {
 /* Dark Mode */
 [data-theme="dark"] body {
     background: linear-gradient(135deg, #1a1a1a, #121212);
-    color: #e0e0e0;
+    color: var(--text-primary);
 }
 
-[data-theme="dark"] .glass-container {
-    background: rgba(30, 30, 30, 0.8);
-    border-color: rgba(255, 255, 255, 0.1);
+[data-theme="dark"] h1,
+[data-theme="dark"] h2,
+[data-theme="dark"] h3,
+[data-theme="dark"] h4,
+[data-theme="dark"] h5,
+[data-theme="dark"] h6 {
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] p,
+[data-theme="dark"] span,
+[data-theme="dark"] div,
+[data-theme="dark"] label {
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .pattern-item,
+[data-theme="dark"] .pattern-header,
+[data-theme="dark"] .pattern-type,
+[data-theme="dark"] .pattern-meta {
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] input,
+[data-theme="dark"] select,
+[data-theme="dark"] textarea {
+    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.1);
 }
 
 [data-theme="dark"] .glass-input {
     background: rgba(255, 255, 255, 0.05);
     border-color: rgba(255, 255, 255, 0.15);
-    color: #e0e0e0;
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] button {
+    color: var(--text-primary);
 }
 
 [data-theme="dark"] .glass-input::placeholder {
-    color: rgba(224, 224, 224, 0.4);
+    color: rgba(255, 248, 220, 0.4);
 }
 
 [data-theme="dark"] .glass-button {
     background: linear-gradient(135deg, rgba(0, 212, 212, 0.3), rgba(64, 64, 64, 0.5));
     border-color: rgba(255, 255, 255, 0.15);
-    color: #e0e0e0;
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .glass-container {
+    background: rgba(30, 30, 30, 0.8);
+    border-color: rgba(255, 255, 255, 0.1);
 }
 
 [data-theme="dark"] .pattern-item {
