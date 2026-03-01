@@ -169,12 +169,12 @@ register("Bearish Engulfing", 2,
 
 // Tweezer Top: matching highs with first bullish and second bearish
 register("Tweezer Top", 2,
-    f => Math.abs(f[0].high - f[1].high) / Math.max(f[0].high, 1e-12) < 0.001 &&
+    f => Math.abs(f[0].high - f[1].high) / Math.max(Math.abs(f[0].high), 1e-12) < 0.001 &&
          f[0].bullish && f[1].bearish);
 
 // Tweezer Bottom: matching lows with first bearish and second bullish
 register("Tweezer Bottom", 2,
-    f => Math.abs(f[0].low - f[1].low) / Math.max(f[0].low, 1e-12) < 0.001 &&
+    f => Math.abs(f[0].low - f[1].low) / Math.max(Math.abs(f[0].low), 1e-12) < 0.001 &&
          f[0].bearish && f[1].bullish);
 
 // Abandoned Baby Bullish: bearish, gapped-down doji, bullish gap-up

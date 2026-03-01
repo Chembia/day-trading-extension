@@ -1,6 +1,8 @@
 // Twelve Data API Client
 
 const API_BASE_URL = "https://api.twelvedata.com/time_series";
+// The 'demo' key is Twelve Data's public demo key (rate-limited but requires no registration).
+// For higher limits, replace this with a free API key from https://twelvedata.com/
 const EMBEDDED_API_KEY = "demo";
 const CACHE_DURATION = 60 * 60 * 1000; // 1 hour in milliseconds
 

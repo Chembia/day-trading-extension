@@ -209,9 +209,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         const annotations = chart.options.plugins.annotation.annotations;
         if (annotations[annotationKey]) {
             annotations[annotationKey].borderWidth = active ? 4 : 2;
-            annotations[annotationKey].backgroundColor = active
-                ? annotations[annotationKey].backgroundColor.replace(/[\d.]+\)$/, '0.4)')
-                : annotations[annotationKey].backgroundColor.replace(/[\d.]+\)$/, '0.2)');
             chart.update('none');
         }
     }
