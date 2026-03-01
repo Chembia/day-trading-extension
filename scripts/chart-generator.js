@@ -41,10 +41,11 @@ function createCandlestickChart(canvasId, stockData, patterns) {
                     callbacks: {
                         title: function(context) {
                             const index = context[0].dataIndex;
-                            return stockData[index].Date;
+                            return stockData[index] ? stockData[index].Date : '';
                         },
                         label: function(context) {
                             const point = context.raw;
+                            if (!point) return [];
                             return [
                                 `Open: $${point.o.toFixed(2)}`,
                                 `High: $${point.h.toFixed(2)}`,
@@ -66,9 +67,10 @@ function createCandlestickChart(canvasId, stockData, patterns) {
                     },
                     ticks: {
                         callback: function(value, index) {
-                            if (stockData[Math.floor(value)]) {
-                                const date = stockData[Math.floor(value)].Date;
-                                return date.substring(5); // Show MM-DD
+                            const idx = Math.floor(value);
+                            if (stockData[idx]) {
+                                const date = stockData[idx].Date;
+                                return date.substring(5, 10); // Show MM-DD
                             }
                             return '';
                         },
@@ -93,9 +95,13 @@ function createCandlestickChart(canvasId, stockData, patterns) {
     };
     
     // Create chart
-    const chart = new Chart(ctx, config);
-    
-    return chart;
+    try {
+        const chart = new Chart(ctx, config);
+        return chart;
+    } catch (e) {
+        console.error('Chart creation error:', e);
+        return null;
+    }
 }
 
 function createPatternAnnotations(patterns, stockData) {
@@ -109,12 +115,16 @@ function createPatternAnnotations(patterns, stockData) {
         let minPrice = Infinity;
         let maxPrice = -Infinity;
         for (let i = startIdx; i <= endIdx; i++) {
-            minPrice = Math.min(minPrice, stockData[i].Low);
-            maxPrice = Math.max(maxPrice, stockData[i].High);
+            if (stockData[i]) {
+                minPrice = Math.min(minPrice, stockData[i].Low);
+                maxPrice = Math.max(maxPrice, stockData[i].High);
+            }
         }
         
+        if (!isFinite(minPrice) || !isFinite(maxPrice)) return;
+        
         // Add some padding
-        const padding = (maxPrice - minPrice) * 0.1;
+        const padding = (maxPrice - minPrice) * 0.1 || 0.5;
         minPrice -= padding;
         maxPrice += padding;
         
@@ -162,6 +172,54 @@ function createPatternAnnotations(patterns, stockData) {
     return annotations;
 }
 
+// Zoom chart to a specific candle range
+function zoomChartToPattern(chart, stockData, centerIndex, bufferCandles) {
+    if (!chart || !stockData) return;
+    const startIndex = Math.max(0, centerIndex - bufferCandles);
+    const endIndex = Math.min(stockData.length - 1, centerIndex + bufferCandles);
+    chart.options.scales.x.min = startIndex - 0.5;
+    chart.options.scales.x.max = endIndex + 0.5;
+    chart.update('none');
+}
+
+// Reset chart zoom
+function resetChartZoom(chart, stockData) {
+    if (!chart || !stockData) return;
+    chart.options.scales.x.min = -0.5;
+    chart.options.scales.x.max = stockData.length - 0.5;
+    chart.update('none');
+}
+
+// Highlight a pattern annotation on the chart
+const _annotationOriginals = new Map();
+
+function highlightAnnotation(chart, annotationKey, highlight) {
+    if (!chart) return;
+    const ann = chart.options.plugins.annotation.annotations[annotationKey];
+    if (!ann) return;
+    if (highlight) {
+        if (!_annotationOriginals.has(annotationKey)) {
+            _annotationOriginals.set(annotationKey, {
+                borderWidth: ann.borderWidth,
+                backgroundColor: ann.backgroundColor
+            });
+        }
+        ann.borderWidth = 4;
+        // Increase alpha slightly for highlight effect
+        ann.backgroundColor = ann.backgroundColor.replace(
+            /rgba\(([^,]+),([^,]+),([^,]+),[^)]+\)/,
+            'rgba($1,$2,$3,0.45)'
+        );
+    } else {
+        const orig = _annotationOriginals.get(annotationKey);
+        if (orig) {
+            ann.borderWidth = orig.borderWidth;
+            ann.backgroundColor = orig.backgroundColor;
+        }
+    }
+    chart.update('none');
+}
+
 // Download chart as PNG
 function downloadChart(chartId, filename) {
     const canvas = document.getElementById(chartId);
@@ -176,12 +234,18 @@ function downloadChart(chartId, filename) {
 if (typeof window !== 'undefined') {
     window.createCandlestickChart = createCandlestickChart;
     window.downloadChart = downloadChart;
+    window.zoomChartToPattern = zoomChartToPattern;
+    window.resetChartZoom = resetChartZoom;
+    window.highlightAnnotation = highlightAnnotation;
 }
 
 // Export for use in other modules
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
         createCandlestickChart,
-        downloadChart
+        downloadChart,
+        zoomChartToPattern,
+        resetChartZoom,
+        highlightAnnotation
     };
 }

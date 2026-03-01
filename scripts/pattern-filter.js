@@ -6,52 +6,56 @@ function calculatePatternConfidence(patternName, features, patternCandles) {
     
     // Pattern-specific scoring
     if (patternName.includes("Hammer")) {
-        const lowerQuality = Math.min(100, (f.lower_shadow / Math.max(f.body, 0.001)) * 20);
-        const upperQuality = f.minimal_upper ? 100 : 40;
-        score = (lowerQuality * 0.7 + upperQuality * 0.3);
+        const shadowRatioScore = Math.min(100, (f.lower_shadow_ratio || 0) * 150);
+        const bodyPositionScore = Math.min(100, ((f.body_top_position || 0)) * 130);
+        const upperPenalty = f.upper_shadow_ratio > 0.15 ? 0.7 : 1.0;
+        score = (shadowRatioScore * 0.5 + bodyPositionScore * 0.5) * upperPenalty;
     }
     else if (patternName.includes("Engulfing")) {
-        const bodyDiff = Math.abs(features[1].body - features[0].body);
-        score = Math.min(100, bodyDiff * 200);
+        if (features.length >= 2) {
+            const sizeRatio = features[1].body / Math.max(features[0].body, 0.001);
+            score = Math.min(100, sizeRatio * 55);
+        } else {
+            score = 75;
+        }
     }
     else if (patternName.includes("Tweezer")) {
-        // High confidence for exact tweezer patterns
-        score = 95;
-    }
-    else if (patternName.includes("Abandoned Baby")) {
-        // Rare pattern, high confidence when detected
-        score = 90;
-    }
-    else if (patternName.includes("Three White Soldiers") || patternName.includes("Three Black Crows")) {
-        // Strong multi-candle pattern
-        score = 85;
-    }
-    else if (patternName.includes("Rising Three Methods") || patternName.includes("Falling Three Methods")) {
-        // Strong 5-candle pattern
         score = 88;
     }
+    else if (patternName.includes("Abandoned Baby")) {
+        score = 92;
+    }
+    else if (patternName.includes("Three White Soldiers") || patternName.includes("Three Black Crows")) {
+        score = 90;
+    }
+    else if (patternName.includes("Rising Three Methods") || patternName.includes("Falling Three Methods")) {
+        score = 91;
+    }
     else if (patternName.includes("ExtremeBody")) {
-        const bodyRatio = f.body_ratio;
-        score = Math.min(100, bodyRatio * 120);
+        score = Math.min(100, f.body_ratio * 130);
     }
     else if (patternName.includes("VolatilityExpansion")) {
         const volatilityRatio = f.range / Math.max(f.volatility, 0.001);
-        score = Math.min(100, volatilityRatio * 30);
+        score = Math.min(100, volatilityRatio * 28);
     }
     else if (patternName.includes("LiquiditySweep")) {
-        score = 82;
+        score = 85;
     }
     else if (patternName.includes("Hanging Man")) {
-        score = 75;
+        score = 78;
     }
     else {
-        // Default score for other patterns
-        score = 70;
+        score = 72;
+    }
+    
+    // Volume confirmation bonus
+    if (f.aboveAvgVolume) {
+        score *= 1.1;
     }
     
     // Bonus for trend alignment
     if (f.trend !== "neutral") {
-        score *= 1.2;
+        score *= 1.15;
     }
     
     // Bonus for multi-candle patterns
@@ -94,8 +98,8 @@ function filterPatterns(patternResults, features, df) {
             // Calculate confidence
             const confidence = calculatePatternConfidence(patternName, patternFeatures, patternCandles);
             
-            // Only include patterns with confidence > 70
-            if (confidence > 70) {
+            // Only include patterns with confidence > 72
+            if (confidence > 72) {
                 filteredPatterns.push({
                     index: idx,
                     patternId: parseInt(patternId),
@@ -112,16 +116,13 @@ function filterPatterns(patternResults, features, df) {
     
     // Sort by confidence (descending) and prioritize multi-candle patterns
     filteredPatterns.sort((a, b) => {
-        // Prioritize multi-candle patterns
         if (a.candles >= 3 && b.candles < 3) return -1;
         if (b.candles >= 3 && a.candles < 3) return 1;
-        
-        // Then sort by confidence
         return b.confidence - a.confidence;
     });
     
-    // Limit to maximum 15 patterns
-    return filteredPatterns.slice(0, 15);
+    // Limit to maximum 50 patterns (sidebar filter handles top-N display)
+    return filteredPatterns.slice(0, 50);
 }
 
 function determinePatternType(patternName) {
@@ -131,7 +132,8 @@ function determinePatternType(patternName) {
     if (name.includes("bullish") || 
         name.includes("hammer") || 
         name.includes("white soldiers") ||
-        name.includes("rising")) {
+        name.includes("rising") ||
+        name.includes("liquiditysweeplow")) {
         return "bullish";
     }
     
@@ -139,7 +141,8 @@ function determinePatternType(patternName) {
     if (name.includes("bearish") || 
         name.includes("hanging man") || 
         name.includes("black crows") ||
-        name.includes("falling")) {
+        name.includes("falling") ||
+        name.includes("liquiditysweephigh")) {
         return "bearish";
     }
     
@@ -154,9 +157,9 @@ function getSuggestedAction(patternType, confidence) {
     
     switch (patternType) {
         case "bullish":
-            return confidence >= 85 ? "Strong Buy" : "Buy";
+            return confidence >= 88 ? "Strong Buy" : "Buy";
         case "bearish":
-            return confidence >= 85 ? "Strong Sell" : "Sell";
+            return confidence >= 88 ? "Strong Sell" : "Sell";
         default:
             return "Hold";
     }

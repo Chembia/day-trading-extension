@@ -26,6 +26,41 @@
                 </button>
             </div>
         </header>
+
+        <!-- Top Control Bar -->
+        <div id="controlBar" class="control-bar glass-container" style="display:none;">
+            <div class="control-group">
+                <label for="stock-input">Symbol:</label>
+                <input type="text" id="stock-input" class="glass-input control-input" placeholder="e.g. AAPL" maxlength="10">
+            </div>
+            <div class="control-group">
+                <label for="start-time-control">Start:</label>
+                <input type="datetime-local" id="start-time-control" class="glass-input control-input">
+            </div>
+            <div class="control-group">
+                <label for="end-time-control">End:</label>
+                <input type="datetime-local" id="end-time-control" class="glass-input control-input">
+            </div>
+            <div class="control-group">
+                <label for="interval-selector">Interval:</label>
+                <select id="interval-selector" class="glass-input control-input">
+                    <option value="1min">1 Minute</option>
+                    <option value="5min">5 Minutes</option>
+                    <option value="15min">15 Minutes</option>
+                    <option value="30min">30 Minutes</option>
+                    <option value="45min">45 Minutes</option>
+                    <option value="1h">1 Hour</option>
+                    <option value="2h">2 Hours</option>
+                    <option value="4h">4 Hours</option>
+                    <option value="1day" selected>1 Day</option>
+                    <option value="1week">1 Week</option>
+                    <option value="1month">1 Month</option>
+                </select>
+            </div>
+            <button id="reanalyze-btn" class="glass-button reanalyze-btn">
+                🔄 Re-Analyze
+            </button>
+        </div>
         
         <main class="results-main">
             <!-- Chart Section -->
@@ -34,22 +69,70 @@
                 <div class="chart-wrapper">
                     <canvas id="stockChart"></canvas>
                 </div>
-            </section>
-            
-            <!-- Patterns Summary -->
-            <section class="patterns-section glass-container">
-                <div class="section-header">
-                    <h2>Detected Patterns</h2>
-                    <span id="patternCount" class="pattern-badge">0 patterns</span>
+                <!-- Zoom Controls -->
+                <div id="zoom-controls" class="zoom-controls hidden">
+                    <label>Zoom Range:</label>
+                    <input type="range" id="zoom-slider" min="1" max="50" value="5">
+                    <span id="zoom-range-display">±5 candles</span>
+                    <button id="reset-zoom" class="glass-button glass-button-secondary zoom-reset-btn">Reset</button>
                 </div>
-                
-                <div id="noPatterns" class="no-patterns" style="display: none;">
-                    <p>No patterns found for the selected date range.</p>
-                    <p class="small-text">Try adjusting your date range or selecting a different stock.</p>
-                </div>
-                
-                <div id="patternsTable" class="patterns-table"></div>
             </section>
+
+            <!-- Layout: Sidebar + Patterns -->
+            <div class="main-content-layout">
+                <!-- Sidebar -->
+                <aside class="sidebar glass-container">
+                    <div class="sidebar-header">
+                        <h3>Detected Patterns (<span id="pattern-count">0</span>)</h3>
+                    </div>
+
+                    <!-- Filters -->
+                    <div class="filter-section">
+                        <div class="filter-group">
+                            <label for="pattern-type-filter">Filter by Type:</label>
+                            <select id="pattern-type-filter" class="glass-input filter-input">
+                                <option value="all">All Patterns</option>
+                                <option value="bullish">Bullish Only</option>
+                                <option value="bearish">Bearish Only</option>
+                                <option value="neutral">Neutral Only</option>
+                                <option value="hammer">Hammers</option>
+                                <option value="engulfing">Engulfing</option>
+                                <option value="doji">Doji</option>
+                                <option value="soldier">Soldiers / Crows</option>
+                                <option value="liquidity">Liquidity Sweeps</option>
+                                <option value="volatility">Volatility Expansion</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label for="top-n-input">Show Top:</label>
+                            <div class="top-n-row">
+                                <input type="number" id="top-n-input" class="glass-input filter-input top-n" min="1" max="50" value="15">
+                                <span class="top-n-label">highest confidence</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Pattern List -->
+                    <div id="sidebar-pattern-list" class="sidebar-pattern-list">
+                        <!-- Populated by JS -->
+                    </div>
+                </aside>
+
+                <!-- Patterns Summary (table) -->
+                <section class="patterns-section glass-container">
+                    <div class="section-header">
+                        <h2>Pattern Details</h2>
+                        <span id="patternCount" class="pattern-badge">0 patterns</span>
+                    </div>
+                    
+                    <div id="noPatterns" class="no-patterns" style="display: none;">
+                        <p>No patterns found for the selected date range.</p>
+                        <p class="small-text">Try adjusting your date range or selecting a different stock.</p>
+                    </div>
+                    
+                    <div id="patternsTable" class="patterns-table"></div>
+                </section>
+            </div>
         </main>
         
         <!-- Loading Overlay -->
@@ -68,7 +151,48 @@
             </button>
         </div>
     </div>
+
+    <!-- Help Button -->
+    <button id="help-toggle" class="help-button" title="Help">❓</button>
+
+    <!-- Help Panel -->
+    <div id="help-panel" class="help-panel hidden">
+        <div class="help-content">
+            <h3>🎯 Quick Start Guide</h3>
+
+            <div class="help-section">
+                <h4>1. Understanding the Chart</h4>
+                <p>Green candles = price went up<br>
+                   Red candles = price went down<br>
+                   Colored boxes = detected patterns</p>
+            </div>
+
+            <div class="help-section">
+                <h4>2. Viewing Patterns</h4>
+                <p>• Hover over pattern in sidebar to highlight it on the chart<br>
+                   • Click pattern to zoom in on the chart<br>
+                   • Click "Read More" for a full explanation</p>
+            </div>
+
+            <div class="help-section">
+                <h4>3. Filtering Results</h4>
+                <p>• Use "Filter by Type" to show specific patterns<br>
+                   • Adjust "Show Top N" to limit results<br>
+                   • Higher confidence = more reliable signal</p>
+            </div>
+
+            <div class="help-section">
+                <h4>4. Changing Settings</h4>
+                <p>• Enter new stock symbol at the top control bar<br>
+                   • Change date range or interval<br>
+                   • Click "Re-Analyze" to fetch new data</p>
+            </div>
+
+            <button id="help-close" class="glass-button">Got it!</button>
+        </div>
+    </div>
     
+    <script src="../scripts/api-client.js"></script>
     <script src="../scripts/fluey-algorithm.js"></script>
     <script src="../scripts/pattern-filter.js"></script>
     <script src="../scripts/chart-generator.js"></script>
