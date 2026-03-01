@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "Stock Pattern Analyzer",
+  "name": "RBT€",
   "version": "1.0.0",
   "description": "Identify candlestick patterns using FLUEY algorithm",
   "permissions": ["storage", "tabs"],
@@ -13,7 +13,7 @@
   },
   "web_accessible_resources": [
     {
-      "resources": ["notebooks/notebooks.html"],
+      "resources": ["notebooks/notebooks.html", "lineup-gallery.html"],
       "matches": ["<all_urls>"]
     }
   ],

@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RBT€ - Line-Up Gallery</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles/common.css">
+    <link rel="stylesheet" href="lineup-gallery.css">
+</head>
+<body data-theme="light">
+    <header class="gallery-header glass-container">
+        <h1>📊 Line-Up Gallery</h1>
+        <div class="header-actions">
+            <button id="theme-toggle" class="glass-button">🌙 Dark Mode</button>
+            <button id="close-gallery" class="glass-button">✕ Close</button>
+        </div>
+    </header>
+
+    <div id="gallery-container">
+        <!-- Snapshot cards in grid layout -->
+    </div>
+
+    <!-- Lightbox for full-size view -->
+    <div id="lightbox" class="hidden">
+        <div class="lightbox-overlay"></div>
+        <div class="lightbox-content glass-container">
+            <button id="close-lightbox" class="glass-button">✕</button>
+            <img id="lightbox-image" src="" alt="Full size snapshot">
+            <div class="lightbox-meta">
+                <h2 id="lightbox-symbol"></h2>
+                <p id="lightbox-details"></p>
+            </div>
+            <div class="lightbox-actions">
+                <button id="download-snapshot" class="glass-button">💾 Download</button>
+                <button id="delete-from-lightbox" class="glass-button">🗑️ Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="lineup-gallery.js"></script>
+</body>
+</html>
