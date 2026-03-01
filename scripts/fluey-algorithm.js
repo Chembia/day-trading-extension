@@ -37,6 +37,15 @@ function computeVolatility(df, i) {
     return sum / ranges.length;
 }
 
+function computeAvgVolume(df, i) {
+    if (i < VOL_LOOKBACK) {
+        return 0;
+    }
+    const volumes = df.slice(i - VOL_LOOKBACK, i).map(row => row.Volume || 0);
+    const sum = volumes.reduce((acc, val) => acc + val, 0);
+    return sum / volumes.length;
+}
+
 function candleFeatures(df, i, prev = null) {
     const row = df[i];
     const o = row.Open;
@@ -71,6 +80,15 @@ function candleFeatures(df, i, prev = null) {
     f.midpoint = (o + c) / 2;
     f.trend = computeTrend(df, i);
     f.volatility = computeVolatility(df, i);
+    f.volume = row.Volume || 0;
+    f.avgVolume = computeAvgVolume(df, i);
+    f.highVolume = f.avgVolume > 0 ? f.volume >= f.avgVolume : true;
+    // Body position within range (0 = at bottom, 1 = at top)
+    f.bodyPosition = r > 0 ? (Math.min(o, c) - l) / r : 0.5;
+    // Lower shadow as fraction of total range
+    f.lowerShadowRatio = lower / r;
+    // Upper shadow as fraction of total range
+    f.upperShadowRatio = upper / r;
     
     if (prev !== null) {
         f.gap_up = o > prev.high;
@@ -109,58 +127,99 @@ function register(name, candles, rule) {
     NEXT_ID += 1;
 }
 
-// CANONICAL JAPANESE PATTERNS
+// CANONICAL JAPANESE PATTERNS (strengthened rules)
+
+// Hammer: long lower shadow (≥60% of range), body in upper 30%, minimal upper shadow
 register("Hammer", 1,
-    f => f[0].long_lower && f[0].minimal_upper);
+    f => {
+        const f0 = f[0];
+        return f0.long_lower &&
+               f0.minimal_upper &&
+               f0.lowerShadowRatio >= 0.6 &&
+               f0.bodyPosition >= 0.6 &&
+               f0.highVolume;
+    });
 
+// Hanging Man: same shape as Hammer but in uptrend
 register("Hanging Man", 1,
-    f => f[0].long_lower && f[0].trend === "uptrend");
+    f => {
+        const f0 = f[0];
+        return f0.long_lower &&
+               f0.minimal_upper &&
+               f0.lowerShadowRatio >= 0.6 &&
+               f0.bodyPosition >= 0.6 &&
+               f0.trend === "uptrend";
+    });
 
+// Bullish Engulfing: bearish candle fully engulfed by bullish; volume confirmation
 register("Bullish Engulfing", 2,
     f => f[0].bearish && f[1].bullish &&
          f[1].open < f[0].close &&
-         f[1].close > f[0].open);
+         f[1].close > f[0].open &&
+         f[1].body > f[0].body &&
+         f[1].highVolume);
 
+// Bearish Engulfing: bullish candle fully engulfed by bearish; volume confirmation
 register("Bearish Engulfing", 2,
     f => f[0].bullish && f[1].bearish &&
          f[1].open > f[0].close &&
-         f[1].close < f[0].open);
+         f[1].close < f[0].open &&
+         f[1].body > f[0].body &&
+         f[1].highVolume);
 
+// Tweezer Top: matching highs with first bullish and second bearish
 register("Tweezer Top", 2,
-    f => Math.abs(f[0].high - f[1].high) < 1e-6);
+    f => Math.abs(f[0].high - f[1].high) / Math.max(f[0].high, 1e-12) < 0.001 &&
+         f[0].bullish && f[1].bearish);
 
+// Tweezer Bottom: matching lows with first bearish and second bullish
 register("Tweezer Bottom", 2,
-    f => Math.abs(f[0].low - f[1].low) < 1e-6);
+    f => Math.abs(f[0].low - f[1].low) / Math.max(f[0].low, 1e-12) < 0.001 &&
+         f[0].bearish && f[1].bullish);
 
+// Abandoned Baby Bullish: bearish, gapped-down doji, bullish gap-up
 register("Abandoned Baby Bullish", 3,
     f => f[0].bearish &&
          f[1].doji &&
          f[1].gap_down &&
          f[2].bullish &&
-         f[2].gap_up);
+         f[2].gap_up &&
+         f[2].large_body);
 
+// Abandoned Baby Bearish: bullish, gapped-up doji, bearish gap-down
 register("Abandoned Baby Bearish", 3,
     f => f[0].bullish &&
          f[1].doji &&
          f[1].gap_up &&
          f[2].bearish &&
-         f[2].gap_down);
+         f[2].gap_down &&
+         f[2].large_body);
 
+// Three White Soldiers: three consecutive bullish large-body candles, each closing higher
 register("Three White Soldiers", 3,
-    f => f.every(x => x.bullish) &&
-         f[2].close > f[1].close && f[1].close > f[0].close);
+    f => f.every(x => x.bullish && x.large_body) &&
+         f[2].close > f[1].close && f[1].close > f[0].close &&
+         f[2].open > f[1].open && f[1].open > f[0].open);
 
+// Three Black Crows: three consecutive bearish large-body candles, each closing lower
 register("Three Black Crows", 3,
-    f => f.every(x => x.bearish) &&
-         f[2].close < f[1].close && f[1].close < f[0].close);
+    f => f.every(x => x.bearish && x.large_body) &&
+         f[2].close < f[1].close && f[1].close < f[0].close &&
+         f[2].open < f[1].open && f[1].open < f[0].open);
 
+// Rising Three Methods: bullish, three small bearish, then bullish above first
 register("Rising Three Methods", 5,
     f => f[0].bullish && f[4].bullish &&
-         f[4].close > f[0].close);
+         f[4].close > f[0].close &&
+         f[4].open > f[3].close &&
+         f[0].large_body && f[4].large_body);
 
+// Falling Three Methods: bearish, three small bullish, then bearish below first
 register("Falling Three Methods", 5,
     f => f[0].bearish && f[4].bearish &&
-         f[4].close < f[0].close);
+         f[4].close < f[0].close &&
+         f[4].open < f[3].close &&
+         f[0].large_body && f[4].large_body);
 
 // STATISTICAL EXTREME PATTERNS
 ["bullish", "bearish"].forEach(direction => {
@@ -181,17 +240,19 @@ basePatterns.forEach(pattern => {
 // VOLATILITY EXPANSION
 [1.5, 2.0, 2.5].forEach(threshold => {
     register(`VolatilityExpansion_${threshold}`, 1,
-        f => f[0].range > threshold * f[0].volatility);
+        f => f[0].volatility > 0 && f[0].range > threshold * f[0].volatility);
 });
 
 // LIQUIDITY SWEEP PATTERNS
 register("LiquiditySweepHigh", 2,
     f => f[1].high > f[0].high &&
-         f[1].close < f[0].high);
+         f[1].close < f[0].high &&
+         f[1].upperShadowRatio >= 0.3);
 
 register("LiquiditySweepLow", 2,
     f => f[1].low < f[0].low &&
-         f[1].close > f[0].low);
+         f[1].close > f[0].low &&
+         f[1].lowerShadowRatio >= 0.3);
 
 // SCANNER
 function buildFeatureMatrix(df) {
