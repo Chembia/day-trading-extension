@@ -12,6 +12,13 @@
     --warning-amber: rgba(251, 191, 36, 0.3);
 }
 
+/* EB Garamond for headings */
+h1, h2, h3, h4, h5, h6,
+.heading {
+    font-family: 'EB Garamond', Georgia, serif;
+    font-weight: 600;
+}
+
 * {
     margin: 0;
     padding: 0;

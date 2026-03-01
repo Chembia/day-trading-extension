@@ -233,6 +233,7 @@ function downloadChart(chartId, filename) {
 // Make functions available globally for browser usage
 if (typeof window !== 'undefined') {
     window.createCandlestickChart = createCandlestickChart;
+    window.createPatternAnnotations = createPatternAnnotations;
     window.downloadChart = downloadChart;
     window.zoomChartToPattern = zoomChartToPattern;
     window.resetChartZoom = resetChartZoom;
@@ -243,6 +244,7 @@ if (typeof window !== 'undefined') {
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
         createCandlestickChart,
+        createPatternAnnotations,
         downloadChart,
         zoomChartToPattern,
         resetChartZoom,
