@@ -1,6 +1,11 @@
 // Popup JavaScript
 
 document.addEventListener('DOMContentLoaded', async () => {
+    // Apply theme on load
+    await ThemeManager.init();
+    const currentTheme = await ThemeManager.getCurrent();
+    ThemeManager.setupToggle(currentTheme);
+
     // DOM Elements
     const form = document.getElementById('analysisForm');
     const symbolInput = document.getElementById('symbol');
@@ -10,6 +15,22 @@ document.addEventListener('DOMContentLoaded', async () => {
     const analyzeBtn = document.getElementById('analyzeBtn');
     const errorMessage = document.getElementById('errorMessage');
     const loadingOverlay = document.getElementById('loadingOverlay');
+    const settingsBtn = document.getElementById('settingsBtn');
+    const settingsModal = document.getElementById('settings-modal');
+    const closeSettings = document.getElementById('close-settings');
+
+    // Settings modal
+    if (settingsBtn) {
+        settingsBtn.addEventListener('click', () => settingsModal.classList.add('show'));
+    }
+    if (closeSettings) {
+        closeSettings.addEventListener('click', () => settingsModal.classList.remove('show'));
+    }
+    if (settingsModal) {
+        settingsModal.addEventListener('click', (e) => {
+            if (e.target === settingsModal) settingsModal.classList.remove('show');
+        });
+    }
     
     // Set default dates (last 30 days with current time)
     const today = new Date();

@@ -4,15 +4,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pattern Analysis Results</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../styles/common.css">
     <link rel="stylesheet" href="results.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-financial@0.1.1/dist/chartjs-chart-financial.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
+    <script src="../scripts/lib/chart.umd.min.js"></script>
+    <script src="../scripts/lib/chartjs-chart-financial.min.js"></script>
+    <script src="../scripts/lib/chartjs-plugin-annotation.min.js"></script>
 </head>
 <body>
-    <div class="results-container">
+    <div id="resultsContainer" class="results-container">
         <header class="results-header glass-container">
+            <div class="header-left">
+                <button id="sidebar-toggle" class="glass-button sidebar-toggle-btn" title="Toggle Sidebar">
+                    <span id="sidebar-toggle-icon">✕</span> Sidebar
+                </button>
+            </div>
             <div class="header-content">
                 <h1 id="stockTitle">Loading...</h1>
                 <p id="dateRange" class="date-range"></p>
@@ -21,9 +29,10 @@
                 <button id="newAnalysisBtn" class="glass-button">
                     New Analysis
                 </button>
-                <button id="downloadBtn" class="glass-button glass-button-secondary">
-                    Download Chart
+                <button id="notebooksBtn" class="glass-button glass-button-secondary">
+                    📓 Notebooks
                 </button>
+                <button id="settingsBtn" class="glass-button glass-button-secondary" title="Settings">⚙️</button>
             </div>
         </header>
 
@@ -63,24 +72,9 @@
         </div>
         
         <main class="results-main">
-            <!-- Chart Section -->
-            <section class="chart-section glass-container">
-                <h2>Candlestick Chart with Pattern Annotations</h2>
-                <div class="chart-wrapper">
-                    <canvas id="stockChart"></canvas>
-                </div>
-                <!-- Zoom Controls -->
-                <div id="zoom-controls" class="zoom-controls hidden">
-                    <label>Zoom Range:</label>
-                    <input type="range" id="zoom-slider" min="1" max="50" value="5">
-                    <span id="zoom-range-display">±5 candles</span>
-                    <button id="reset-zoom" class="glass-button glass-button-secondary zoom-reset-btn">Reset</button>
-                </div>
-            </section>
-
-            <!-- Layout: Sidebar + Patterns -->
-            <div class="main-content-layout">
-                <!-- Sidebar -->
+            <!-- Results Layout: Sidebar (left) + Main Content (right) -->
+            <div class="results-layout">
+                <!-- Sidebar (left) -->
                 <aside class="sidebar glass-container">
                     <div class="sidebar-header">
                         <h3>Detected Patterns (<span id="pattern-count">0</span>)</h3>
@@ -118,20 +112,48 @@
                     </div>
                 </aside>
 
-                <!-- Patterns Summary (table) -->
-                <section class="patterns-section glass-container">
-                    <div class="section-header">
-                        <h2>Pattern Details</h2>
-                        <span id="patternCount" class="pattern-badge">0 patterns</span>
-                    </div>
-                    
-                    <div id="noPatterns" class="no-patterns" style="display: none;">
-                        <p>No patterns found for the selected date range.</p>
-                        <p class="small-text">Try adjusting your date range or selecting a different stock.</p>
-                    </div>
-                    
-                    <div id="patternsTable" class="patterns-table"></div>
-                </section>
+                <!-- Main Content (right) -->
+                <div class="main-content">
+                    <!-- Chart Section -->
+                    <section class="chart-section glass-container">
+                        <div class="chart-section-header">
+                            <h2>Candlestick Chart with Pattern Annotations</h2>
+                            <div class="chart-actions">
+                                <button id="saveImageBtn" class="glass-button glass-button-secondary chart-action-btn">
+                                    💾 Save Image
+                                </button>
+                                <button id="downloadBtn" class="glass-button glass-button-secondary chart-action-btn">
+                                    ⬇️ Download
+                                </button>
+                            </div>
+                        </div>
+                        <div class="chart-wrapper">
+                            <canvas id="stockChart"></canvas>
+                        </div>
+                        <!-- Zoom Controls -->
+                        <div id="zoom-controls" class="zoom-controls hidden">
+                            <label>Zoom Range:</label>
+                            <input type="range" id="zoom-slider" min="1" max="50" value="5">
+                            <span id="zoom-range-display">±5 candles</span>
+                            <button id="reset-zoom" class="glass-button glass-button-secondary zoom-reset-btn">Reset</button>
+                        </div>
+                    </section>
+
+                    <!-- Patterns Summary (table) -->
+                    <section class="patterns-section glass-container">
+                        <div class="section-header">
+                            <h2>Pattern Details</h2>
+                            <span id="patternCount" class="pattern-badge">0 patterns</span>
+                        </div>
+                        
+                        <div id="noPatterns" class="no-patterns" style="display: none;">
+                            <p>No patterns found for the selected date range.</p>
+                            <p class="small-text">Try adjusting your date range or selecting a different stock.</p>
+                        </div>
+                        
+                        <div id="patternsTable" class="patterns-table"></div>
+                    </section>
+                </div>
             </div>
         </main>
         
@@ -191,11 +213,97 @@
             <button id="help-close" class="glass-button">Got it!</button>
         </div>
     </div>
-    
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="modal">
+        <div class="modal-content glass-container">
+            <div class="modal-header">
+                <h2>⚙️ Settings</h2>
+            </div>
+            <div class="modal-body">
+                <div class="setting-item">
+                    <label class="setting-label">Theme</label>
+                    <div class="theme-toggle">
+                        <button class="theme-option active" data-theme="light">☀️ Light</button>
+                        <button class="theme-option" data-theme="dark">🌙 Dark</button>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close-settings" class="glass-button">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Download Modal -->
+    <div id="download-modal" class="modal">
+        <div class="modal-content glass-container">
+            <div class="modal-header">
+                <h2>⬇️ Download Chart</h2>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Format</label>
+                    <div class="radio-group">
+                        <label class="radio-label">
+                            <input type="radio" name="download-format" value="png" checked> PNG
+                        </label>
+                        <label class="radio-label">
+                            <input type="radio" name="download-format" value="jpeg"> JPG
+                        </label>
+                    </div>
+                </div>
+                <div class="form-group" id="quality-group" style="display:none;">
+                    <label>Quality: <span id="quality-display">90%</span></label>
+                    <input type="range" id="quality-slider" min="80" max="100" value="90" class="quality-slider">
+                </div>
+                <div class="form-group">
+                    <label for="download-filename">Filename</label>
+                    <input type="text" id="download-filename" class="glass-input" placeholder="chart.png">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="cancel-download" class="glass-button glass-button-secondary">Cancel</button>
+                <button id="confirm-download" class="glass-button">Download</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Save Image Modal -->
+    <div id="save-modal" class="modal">
+        <div class="modal-content glass-container">
+            <div class="modal-header">
+                <h2>💾 Save to Notebook</h2>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="notebook-select">Select Notebook</label>
+                    <select id="notebook-select" class="glass-input">
+                        <option value="__new__">+ Create New Notebook</option>
+                    </select>
+                </div>
+                <div id="new-notebook-form" class="form-group">
+                    <label for="new-notebook-name">Notebook Name</label>
+                    <input type="text" id="new-notebook-name" class="glass-input" placeholder="Notebook 1">
+                </div>
+                <div class="form-group">
+                    <label for="save-notes">Notes</label>
+                    <textarea id="save-notes" class="glass-input save-notes-textarea" placeholder="Add notes about this chart..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="cancel-save" class="glass-button glass-button-secondary">Cancel</button>
+                <button id="confirm-save" class="glass-button">Save</button>
+            </div>
+        </div>
+    </div>
+
     <script src="../scripts/api-client.js"></script>
     <script src="../scripts/fluey-algorithm.js"></script>
     <script src="../scripts/pattern-filter.js"></script>
     <script src="../scripts/chart-generator.js"></script>
+    <script src="../scripts/notebook-manager.js"></script>
+    <script src="../scripts/theme-manager.js"></script>
     <script src="results.js"></script>
 </body>
 </html>

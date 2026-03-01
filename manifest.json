@@ -7,6 +7,15 @@
   "host_permissions": [
     "https://api.twelvedata.com/*"
   ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; object-src 'self'"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["notebooks/notebooks.html"],
+      "matches": ["<all_urls>"]
+    }
+  ],
   "action": {
     "default_popup": "popup/popup.html",
     "default_icon": {

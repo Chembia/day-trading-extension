@@ -1,5 +1,7 @@
 // Results Page JavaScript
 
+const MAX_SAVED_PATTERNS = 5;
+
 document.addEventListener('DOMContentLoaded', async () => {
     // DOM Elements
     const stockTitle = document.getElementById('stockTitle');
@@ -13,8 +15,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     const errorText = document.getElementById('errorText');
     const newAnalysisBtn = document.getElementById('newAnalysisBtn');
     const downloadBtn = document.getElementById('downloadBtn');
+    const saveImageBtn = document.getElementById('saveImageBtn');
     const retryBtn = document.getElementById('retryBtn');
     const controlBar = document.getElementById('controlBar');
+    const resultsContainer = document.getElementById('resultsContainer');
+
+    // Sidebar
+    const sidebarToggle = document.getElementById('sidebar-toggle');
+    const sidebarToggleIcon = document.getElementById('sidebar-toggle-icon');
 
     // Sidebar filter elements
     const patternTypeFilter = document.getElementById('pattern-type-filter');
@@ -39,11 +47,252 @@ document.addEventListener('DOMContentLoaded', async () => {
     const helpPanel = document.getElementById('help-panel');
     const helpClose = document.getElementById('help-close');
 
+    // Settings modal
+    const settingsBtn = document.getElementById('settingsBtn');
+    const settingsModal = document.getElementById('settings-modal');
+    const closeSettings = document.getElementById('close-settings');
+
+    // Download modal
+    const downloadModal = document.getElementById('download-modal');
+    const cancelDownload = document.getElementById('cancel-download');
+    const confirmDownload = document.getElementById('confirm-download');
+    const downloadFilename = document.getElementById('download-filename');
+    const qualityGroup = document.getElementById('quality-group');
+    const qualitySlider = document.getElementById('quality-slider');
+    const qualityDisplay = document.getElementById('quality-display');
+
+    // Save modal
+    const saveModal = document.getElementById('save-modal');
+    const cancelSave = document.getElementById('cancel-save');
+    const confirmSave = document.getElementById('confirm-save');
+    const notebookSelect = document.getElementById('notebook-select');
+    const newNotebookForm = document.getElementById('new-notebook-form');
+    const newNotebookName = document.getElementById('new-notebook-name');
+    const saveNotes = document.getElementById('save-notes');
+
+    // Notebooks button
+    const notebooksBtn = document.getElementById('notebooksBtn');
+
     let chart = null;
     let allPatterns = [];
     let currentStockData = [];
     let currentAnalysisInfo = {};
     let activeZoomPatternIndex = null;
+
+    // ---- Theme ----
+    const theme = await ThemeManager.init();
+    ThemeManager.setupToggle(theme);
+
+    // ---- Sidebar Toggle ----
+    async function loadSidebarPref() {
+        return new Promise((resolve) => {
+            chrome.storage.local.get(['sidebarHidden'], (result) => {
+                resolve(result.sidebarHidden === true);
+            });
+        });
+    }
+
+    async function saveSidebarPref(hidden) {
+        return new Promise((resolve) => {
+            chrome.storage.local.set({ sidebarHidden: hidden }, resolve);
+        });
+    }
+
+    function updateSidebarToggleIcon(hidden) {
+        if (sidebarToggleIcon) {
+            sidebarToggleIcon.textContent = hidden ? '☰' : '✕';
+        }
+    }
+
+    // Apply saved sidebar preference
+    const sidebarHidden = await loadSidebarPref();
+    if (sidebarHidden) {
+        resultsContainer.classList.add('sidebar-hidden');
+    }
+    updateSidebarToggleIcon(sidebarHidden);
+
+    if (sidebarToggle) {
+        sidebarToggle.addEventListener('click', async () => {
+            const isHidden = resultsContainer.classList.toggle('sidebar-hidden');
+            updateSidebarToggleIcon(isHidden);
+            await saveSidebarPref(isHidden);
+        });
+    }
+
+    // ---- Settings Modal ----
+    if (settingsBtn) {
+        settingsBtn.addEventListener('click', () => {
+            settingsModal.classList.add('show');
+        });
+    }
+    if (closeSettings) {
+        closeSettings.addEventListener('click', () => {
+            settingsModal.classList.remove('show');
+        });
+    }
+    settingsModal.addEventListener('click', (e) => {
+        if (e.target === settingsModal) settingsModal.classList.remove('show');
+    });
+
+    // ---- Download Modal ----
+    if (downloadBtn) {
+        downloadBtn.addEventListener('click', () => {
+            const info = currentAnalysisInfo;
+            const date = new Date().toISOString().slice(0, 10);
+            const name = info.symbol ? `${info.symbol}_${info.interval || '1day'}_${date}` : `chart_${date}`;
+            const format = document.querySelector('input[name="download-format"]:checked');
+            const fmt = format ? format.value : 'png';
+            if (downloadFilename) downloadFilename.value = `${name}.${fmt}`;
+            downloadModal.classList.add('show');
+        });
+    }
+
+    if (cancelDownload) {
+        cancelDownload.addEventListener('click', () => {
+            downloadModal.classList.remove('show');
+        });
+    }
+
+    downloadModal.addEventListener('click', (e) => {
+        if (e.target === downloadModal) downloadModal.classList.remove('show');
+    });
+
+    // Update filename extension when format changes
+    document.querySelectorAll('input[name="download-format"]').forEach(radio => {
+        radio.addEventListener('change', () => {
+            const fmt = radio.value;
+            if (qualityGroup) qualityGroup.style.display = fmt === 'jpeg' ? 'block' : 'none';
+            if (downloadFilename) {
+                downloadFilename.value = downloadFilename.value.replace(/\.(png|jpeg|jpg)$/i, `.${fmt}`);
+            }
+        });
+    });
+
+    if (qualitySlider) {
+        qualitySlider.addEventListener('input', () => {
+            if (qualityDisplay) qualityDisplay.textContent = `${qualitySlider.value}%`;
+        });
+    }
+
+    if (confirmDownload) {
+        confirmDownload.addEventListener('click', () => {
+            const canvas = document.getElementById('stockChart');
+            if (!canvas) return;
+            const format = document.querySelector('input[name="download-format"]:checked');
+            const fmt = format ? format.value : 'png';
+            const quality = qualitySlider ? parseInt(qualitySlider.value) / 100 : 0.9;
+            const filename = downloadFilename ? downloadFilename.value : `chart.${fmt}`;
+            const dataUrl = fmt === 'jpeg'
+                ? canvas.toDataURL('image/jpeg', quality)
+                : canvas.toDataURL('image/png');
+            const link = document.createElement('a');
+            link.download = filename;
+            link.href = dataUrl;
+            link.click();
+            downloadModal.classList.remove('show');
+        });
+    }
+
+    // ---- Save Image Modal ----
+    async function populateNotebookSelect() {
+        if (!notebookSelect) return;
+        const notebooks = await NotebookManager.getAll();
+        // Clear options except the "Create New" option
+        notebookSelect.innerHTML = '<option value="__new__">+ Create New Notebook</option>';
+        notebooks.forEach(nb => {
+            const opt = document.createElement('option');
+            opt.value = nb.id;
+            opt.textContent = nb.name;
+            notebookSelect.appendChild(opt);
+        });
+        // If no notebooks exist, show new notebook form
+        if (notebooks.length === 0) {
+            if (newNotebookForm) newNotebookForm.style.display = 'block';
+        }
+    }
+
+    if (notebookSelect) {
+        notebookSelect.addEventListener('change', () => {
+            if (newNotebookForm) {
+                newNotebookForm.style.display = notebookSelect.value === '__new__' ? 'block' : 'none';
+            }
+        });
+    }
+
+    if (saveImageBtn) {
+        saveImageBtn.addEventListener('click', async () => {
+            await populateNotebookSelect();
+            if (newNotebookForm) {
+                newNotebookForm.style.display = notebookSelect && notebookSelect.value === '__new__' ? 'block' : 'none';
+            }
+            if (saveNotes) saveNotes.value = '';
+            saveModal.classList.add('show');
+        });
+    }
+
+    if (cancelSave) {
+        cancelSave.addEventListener('click', () => {
+            saveModal.classList.remove('show');
+        });
+    }
+
+    saveModal.addEventListener('click', (e) => {
+        if (e.target === saveModal) saveModal.classList.remove('show');
+    });
+
+    if (confirmSave) {
+        confirmSave.addEventListener('click', async () => {
+            const canvas = document.getElementById('stockChart');
+            if (!canvas) {
+                showReanalysisError('Chart not available to save.');
+                return;
+            }
+            confirmSave.disabled = true;
+            try {
+                const dataUrl = canvas.toDataURL('image/png');
+                let notebookId = notebookSelect ? notebookSelect.value : '__new__';
+                if (notebookId === '__new__') {
+                    const nbName = newNotebookName && newNotebookName.value.trim()
+                        ? newNotebookName.value.trim()
+                        : undefined;
+                    const nb = await NotebookManager.create(nbName);
+                    notebookId = nb.id;
+                }
+                const info = currentAnalysisInfo;
+                await NotebookManager.saveImage(notebookId, {
+                    dataUrl,
+                    symbol: info.symbol || '',
+                    interval: info.interval || '',
+                    startDate: info.startDate || '',
+                    endDate: info.endDate || '',
+                    patterns: allPatterns.slice(0, MAX_SAVED_PATTERNS).map(p => p.patternName),
+                    notes: saveNotes ? saveNotes.value.trim() : ''
+                });
+                saveModal.classList.remove('show');
+                showSuccessMessage('Image saved to notebook!');
+            } catch (err) {
+                showReanalysisError('Failed to save image: ' + err.message);
+            } finally {
+                confirmSave.disabled = false;
+            }
+        });
+    }
+
+    // ---- Notebooks Button ----
+    if (notebooksBtn) {
+        notebooksBtn.addEventListener('click', () => {
+            chrome.tabs.create({ url: chrome.runtime.getURL('notebooks/notebooks.html') });
+        });
+    }
+
+    // Show a non-blocking success message
+    function showSuccessMessage(message) {
+        const div = document.createElement('div');
+        div.className = 'success-toast';
+        div.textContent = message;
+        document.body.appendChild(div);
+        setTimeout(() => div.remove(), 3000);
+    }
 
     // Show a non-blocking error bar at the top of the page
     function showReanalysisError(message) {
@@ -359,12 +608,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     newAnalysisBtn.addEventListener('click', () => {
         chrome.action.openPopup();
         window.close();
-    });
-    
-    downloadBtn.addEventListener('click', () => {
-        if (chart) {
-            downloadChart('stockChart', 'stock-pattern-analysis.png');
-        }
     });
     
     retryBtn.addEventListener('click', () => {
