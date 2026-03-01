@@ -103,11 +103,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     
     function showLoading() {
-        loadingOverlay.style.display = 'flex';
+        loadingOverlay.classList.remove('hidden');
     }
     
     function hideLoading() {
-        loadingOverlay.style.display = 'none';
+        loadingOverlay.classList.add('hidden');
     }
     
     // Convert symbol to uppercase as user types
