@@ -1,4 +1,4 @@
-# Fluey - Chrome Extension
+# RBT€ - Chrome Extension
 
 A production-ready Chrome extension that identifies candlestick patterns in stock data using the FLUEY algorithm and displays annotated charts with a beautiful glassmorphism interface.
 
