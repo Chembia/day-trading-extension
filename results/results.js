@@ -161,7 +161,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.querySelectorAll('input[name="download-format"]').forEach(radio => {
         radio.addEventListener('change', () => {
             const fmt = radio.value;
-            if (qualityGroup) qualityGroup.style.display = fmt === 'jpeg' ? 'block' : 'none';
+            if (qualityGroup) qualityGroup.classList.toggle('hidden', fmt !== 'jpeg');
             if (downloadFilename) {
                 downloadFilename.value = downloadFilename.value.replace(/\.(png|jpeg|jpg)$/i, `.${fmt}`);
             }
@@ -207,14 +207,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
         // If no notebooks exist, show new notebook form
         if (notebooks.length === 0) {
-            if (newNotebookForm) newNotebookForm.style.display = 'block';
+            if (newNotebookForm) newNotebookForm.classList.remove('hidden');
         }
     }
 
     if (notebookSelect) {
         notebookSelect.addEventListener('change', () => {
             if (newNotebookForm) {
-                newNotebookForm.style.display = notebookSelect.value === '__new__' ? 'block' : 'none';
+                newNotebookForm.classList.toggle('hidden', notebookSelect.value !== '__new__');
             }
         });
     }
@@ -223,7 +223,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         saveImageBtn.addEventListener('click', async () => {
             await populateNotebookSelect();
             if (newNotebookForm) {
-                newNotebookForm.style.display = notebookSelect && notebookSelect.value === '__new__' ? 'block' : 'none';
+                newNotebookForm.classList.toggle('hidden', !(notebookSelect && notebookSelect.value === '__new__'));
             }
             if (saveNotes) saveNotes.value = '';
             saveModal.classList.add('show');
@@ -297,8 +297,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Show a non-blocking error bar at the top of the page
     function showReanalysisError(message) {
         errorText.textContent = message;
-        errorContainer.style.display = 'block';
-        setTimeout(() => { errorContainer.style.display = 'none'; }, 5000);
+        errorContainer.classList.remove('hidden');
+        setTimeout(() => { errorContainer.classList.add('hidden'); }, 5000);
     }
 
     // Shared timestamp formatting function
@@ -362,9 +362,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (patternCountSidebar) patternCountSidebar.textContent = count;
 
         if (count === 0) {
-            noPatterns.style.display = 'block';
+            noPatterns.classList.remove('hidden');
         } else {
-            noPatterns.style.display = 'none';
+            noPatterns.classList.add('hidden');
             displaySidebarPatterns(filtered);
             displayPatterns(filtered);
 
@@ -533,7 +533,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 return;
             }
 
-            loadingOverlay.style.display = 'flex';
+            loadingOverlay.classList.remove('hidden');
             reanalyzeBtn.disabled = true;
 
             try {
@@ -550,7 +550,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             } catch (error) {
                 showReanalysisError(getErrorMessage(error.message));
             } finally {
-                loadingOverlay.style.display = 'none';
+                loadingOverlay.classList.add('hidden');
                 reanalyzeBtn.disabled = false;
             }
         });
@@ -589,18 +589,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (startTimeControl) startTimeControl.value = toDatetimeLocal(startDate);
         if (endTimeControl) endTimeControl.value = toDatetimeLocal(endDate);
         if (intervalSelector && interval) intervalSelector.value = interval;
-        if (controlBar) controlBar.style.display = 'flex';
+        if (controlBar) controlBar.classList.remove('hidden');
 
         // Run analysis
         runAnalysis(data);
 
         // Hide loading
-        loadingOverlay.style.display = 'none';
+        loadingOverlay.classList.add('hidden');
         
     } catch (error) {
         console.error('Error:', error);
-        loadingOverlay.style.display = 'none';
-        errorContainer.style.display = 'block';
+        loadingOverlay.classList.add('hidden');
+        errorContainer.classList.remove('hidden');
         errorText.textContent = error.message || 'An error occurred while processing the analysis.';
     }
     
