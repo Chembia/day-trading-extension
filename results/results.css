@@ -740,6 +740,18 @@ body {
     min-height: 80px;
 }
 
+/* Light Mode Contrast Fixes */
+[data-theme="light"] .read-more-toggle {
+    color: #2C2C2C;
+    background: rgba(44, 44, 44, 0.1);
+    border-radius: 4px;
+    padding: 2px 6px;
+}
+
+[data-theme="light"] .pattern-item {
+    color: #2C2C2C;
+}
+
 /* Dark Mode */
 [data-theme="dark"] body {
     background: linear-gradient(135deg, #1a1a1a, #121212);
@@ -1051,4 +1063,146 @@ body {
     border-color: rgba(100, 200, 200, 0.7);
     color: #1a6a6a;
     font-weight: bold;
+}
+
+/* Line-Up Sidebar */
+#lineup-container {
+    position: fixed;
+    right: 20px;
+    top: 80px;
+    width: 260px;
+    height: calc(100vh - 120px);
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    overflow: hidden;
+    z-index: 100;
+}
+
+#lineup-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+#lineup-header h3 {
+    margin: 0;
+    font-size: 16px;
+    color: var(--text-primary);
+}
+
+#open-gallery {
+    padding: 6px 10px !important;
+    font-size: 11px !important;
+    width: auto !important;
+}
+
+#add-to-lineup {
+    width: 100%;
+    padding: 10px !important;
+    font-weight: 600;
+}
+
+#lineup-snapshots {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding-right: 2px;
+}
+
+#lineup-snapshots::-webkit-scrollbar {
+    width: 4px;
+}
+#lineup-snapshots::-webkit-scrollbar-track {
+    background: rgba(182,182,182,0.1);
+    border-radius: 2px;
+}
+#lineup-snapshots::-webkit-scrollbar-thumb {
+    background: rgba(208,250,249,0.5);
+    border-radius: 2px;
+}
+
+.snapshot-card {
+    padding: 10px;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.snapshot-card:hover {
+    transform: scale(1.02);
+}
+
+.snapshot-thumbnail {
+    width: 100%;
+    height: 100px;
+    object-fit: cover;
+    border-radius: 8px;
+    margin-bottom: 8px;
+}
+
+.snapshot-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    font-size: 11px;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+}
+
+.snapshot-symbol {
+    font-weight: 600;
+    font-size: 13px;
+    color: var(--text-primary);
+}
+
+.snapshot-actions {
+    display: flex;
+    gap: 6px;
+}
+
+.snapshot-actions button {
+    flex: 1;
+    padding: 5px;
+    background: rgba(208, 250, 249, 0.2);
+    border: 1px solid rgba(182, 182, 182, 0.3);
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background 0.2s;
+}
+
+.snapshot-actions button:hover {
+    background: rgba(208, 250, 249, 0.4);
+}
+
+[data-theme="dark"] .snapshot-symbol {
+    color: #FFFFF3;
+}
+
+[data-theme="dark"] .snapshot-meta {
+    color: #B6B6B6;
+}
+
+/* Toast Notification */
+.toast {
+    position: fixed;
+    bottom: 80px;
+    right: 300px;
+    padding: 12px 20px;
+    background: rgba(76, 175, 80, 0.9) !important;
+    color: white !important;
+    border-radius: 8px;
+    transform: translateY(100px);
+    opacity: 0;
+    transition: all 0.3s;
+    z-index: 10000;
+    pointer-events: none;
+}
+
+.toast.show {
+    transform: translateY(0);
+    opacity: 1;
 }

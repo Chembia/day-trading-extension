@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pattern Analysis Results</title>
+    <title>RBT€ - Pattern Analysis Results</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -199,6 +199,38 @@
 
     <!-- Help Button -->
     <button id="help-toggle" class="help-button" title="Help">❓</button>
+
+    <!-- Line-Up Container -->
+    <div id="lineup-container" class="glass-container">
+        <div id="lineup-header">
+            <h3>Line-Up</h3>
+            <button id="open-gallery" class="glass-button" title="Open Gallery View">
+                📊 Gallery
+            </button>
+        </div>
+        <button id="add-to-lineup" class="glass-button">
+            ➕ Add Current Chart
+        </button>
+        <div id="lineup-snapshots">
+            <!-- Snapshot cards will be dynamically added here -->
+        </div>
+    </div>
+
+    <!-- Snapshot card template -->
+    <template id="snapshot-card-template">
+        <div class="snapshot-card glass-container" data-snapshot-id="">
+            <img class="snapshot-thumbnail" src="" alt="Chart snapshot">
+            <div class="snapshot-meta">
+                <span class="snapshot-symbol"></span>
+                <span class="snapshot-interval"></span>
+                <span class="snapshot-timestamp"></span>
+            </div>
+            <div class="snapshot-actions">
+                <button class="load-snapshot" title="Load to chart">📂</button>
+                <button class="delete-snapshot" title="Remove">🗑️</button>
+            </div>
+        </div>
+    </template>
 
     <!-- Help Panel -->
     <div id="help-panel" class="help-panel hidden">

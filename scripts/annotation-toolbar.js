@@ -35,6 +35,10 @@ function createAnnotationToolbar(containerId, onToolSelect) {
         btn.title = tool.title;
         btn.setAttribute('aria-label', tool.title);
         btn.textContent = tool.label;
+        btn.draggable = true;
+        btn.addEventListener('dragstart', (e) => {
+            e.dataTransfer.setData('tool-type', tool.id);
+        });
         btn.addEventListener('click', () => {
             // Toggle active
             toolbar.querySelectorAll('.annotation-tool-btn').forEach(b => b.classList.remove('active'));

@@ -194,6 +194,41 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         });
         canvas.setAttribute('tabindex', '0');
+
+        // Drag-and-drop support: allow dropping annotation tools onto the chart
+        canvas.addEventListener('dragover', (e) => e.preventDefault());
+        canvas.addEventListener('drop', async (e) => {
+            e.preventDefault();
+            const toolType = e.dataTransfer.getData('tool-type');
+            if (!toolType || !currentStockData || currentStockData.length === 0) return;
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            const xScale = chart && chart.scales && chart.scales.x;
+            const yScale = chart && chart.scales && chart.scales.y;
+            if (!xScale || !yScale) return;
+            const xIndex = Math.round(xScale.getValueForPixel(x));
+            const price = yScale.getValueForPixel(y);
+            if (xIndex < 0 || xIndex >= currentStockData.length) return;
+            const timestamp = currentStockData[xIndex] ? currentStockData[xIndex].Date : String(xIndex);
+
+            if (toolType === 'horizontal_line') {
+                currentAnnotations = addAnnotation(currentAnnotations, 'horizontal_line', { timestamp, price });
+                await saveAnnotations(currentSymbol, currentAnnotations);
+                updateAnnotationsOnChart();
+            } else if (toolType === 'trend_line') {
+                trendLineStart = { timestamp, price };
+                // Activate trend line tool so the user can click for the second point
+                activeTool = 'trend_line';
+            } else if (toolType === 'text_note') {
+                const text = window.prompt('Enter note text:');
+                if (text) {
+                    currentAnnotations = addAnnotation(currentAnnotations, 'text_note', { timestamp, price, text });
+                    await saveAnnotations(currentSymbol, currentAnnotations);
+                    updateAnnotationsOnChart();
+                }
+            }
+        });
     }
 
     function updateAnnotationsOnChart() {
@@ -223,7 +258,19 @@ document.addEventListener('DOMContentLoaded', async () => {
         const minStrength = srMinStrength ? parseInt(srMinStrength.value) : 2;
         // sensitivity slider: 1=high tolerance(~1%), 10=tight(~0.1%), inverse relationship
         const clusterTolerance = 1.1 - (sensitivity / 10);
-        const srResult = detectSupportResistance(currentStockData, {
+
+        // Use visible data range if chart is zoomed (with buffer for context)
+        let dataForSR = currentStockData;
+        if (chart && chart.scales && chart.scales.x) {
+            const SR_CONTEXT_BUFFER = 10;
+            const xMin = Math.max(0, Math.floor(chart.scales.x.min) - SR_CONTEXT_BUFFER);
+            const xMax = Math.min(currentStockData.length - 1, Math.ceil(chart.scales.x.max) + SR_CONTEXT_BUFFER);
+            if (xMax > xMin && xMax - xMin < currentStockData.length - 1) {
+                dataForSR = currentStockData.slice(xMin, xMax + 1);
+            }
+        }
+
+        const srResult = detectSupportResistance(dataForSR, {
             clusterTolerance: parseFloat(clusterTolerance.toFixed(2)),
             minTouches: 2
         });
@@ -674,6 +721,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (zoomRangeDisplay) zoomRangeDisplay.textContent = `±${buffer} candles`;
             if (activeZoomPatternIndex !== null && chart) {
                 zoomChartToPattern(chart, currentStockData, activeZoomPatternIndex, buffer);
+                updateSROverlay();
             }
         });
     }
@@ -684,6 +732,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             resetChartZoom(chart, currentStockData);
             zoomControls.classList.add('hidden');
             document.querySelectorAll('.pattern-item').forEach(el => el.classList.remove('selected'));
+            updateSROverlay();
         });
     }
 
@@ -743,6 +792,141 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
+    // ---- Line-Up Feature ----
+    function showToast(message) {
+        const toast = document.createElement('div');
+        toast.className = 'toast glass-container';
+        toast.textContent = message;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.classList.add('show'), 10);
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => toast.remove(), 300);
+        }, 2000);
+    }
+
+    function addSnapshotCard(snapshot) {
+        const template = document.getElementById('snapshot-card-template');
+        if (!template) return;
+        const card = template.content.cloneNode(true);
+        const cardElement = card.querySelector('.snapshot-card');
+        cardElement.dataset.snapshotId = snapshot.id;
+        card.querySelector('.snapshot-thumbnail').src = snapshot.dataUrl;
+        card.querySelector('.snapshot-symbol').textContent = snapshot.symbol;
+        card.querySelector('.snapshot-interval').textContent = snapshot.interval;
+        const timestamp = new Date(snapshot.timestamp);
+        card.querySelector('.snapshot-timestamp').textContent =
+            timestamp.toLocaleString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                hour: 'numeric',
+                minute: '2-digit'
+            });
+        const lineupSnapshots = document.getElementById('lineup-snapshots');
+        if (lineupSnapshots) lineupSnapshots.appendChild(card);
+    }
+
+    async function captureChartSnapshot() {
+        const canvas = document.getElementById('stockChart');
+        if (!canvas) { showToast('Chart not ready.'); return; }
+        const dataUrl = canvas.toDataURL('image/png');
+        const snapshot = {
+            id: `snapshot-${Date.now()}`,
+            dataUrl,
+            symbol: currentAnalysisInfo.symbol || '',
+            interval: currentAnalysisInfo.interval || '',
+            startDate: currentAnalysisInfo.startDate || '',
+            endDate: currentAnalysisInfo.endDate || '',
+            timestamp: new Date().toISOString(),
+            manualAnnotations: currentAnnotations ? [...currentAnnotations] : [],
+            zoomState: chart && chart.scales ? {
+                xMin: chart.scales.x.min,
+                xMax: chart.scales.x.max,
+                yMin: chart.scales.y.min,
+                yMax: chart.scales.y.max
+            } : null,
+            patterns: allPatterns ? allPatterns.slice(0, MAX_SAVED_PATTERNS) : []
+        };
+        const storageResult = await chrome.storage.local.get('lineupSnapshots');
+        const snapshots = storageResult.lineupSnapshots || [];
+        snapshots.push(snapshot);
+        await chrome.storage.local.set({ lineupSnapshots: snapshots });
+        addSnapshotCard(snapshot);
+        showToast('Chart added to Line-Up!');
+    }
+
+    async function loadSnapshotToChart(snapshotId) {
+        const storageResult = await chrome.storage.local.get('lineupSnapshots');
+        const snapshots = storageResult.lineupSnapshots || [];
+        const snapshot = snapshots.find(s => s.id === snapshotId);
+        if (!snapshot) return;
+
+        if (stockInput) stockInput.value = snapshot.symbol;
+        if (intervalSelector) intervalSelector.value = snapshot.interval;
+        if (startTimeControl) startTimeControl.value = toDatetimeLocal(snapshot.startDate);
+        if (endTimeControl) endTimeControl.value = toDatetimeLocal(snapshot.endDate);
+
+        if (reanalyzeBtn) reanalyzeBtn.click();
+
+        // Wait for reanalysis to complete before applying zoom/annotations
+        const SNAPSHOT_LOAD_DELAY = 1500;
+        setTimeout(() => {
+            if (chart && snapshot.zoomState) {
+                chart.options.scales.x.min = snapshot.zoomState.xMin;
+                chart.options.scales.x.max = snapshot.zoomState.xMax;
+                chart.update('none');
+            }
+            if (snapshot.manualAnnotations && snapshot.manualAnnotations.length > 0) {
+                currentAnnotations = snapshot.manualAnnotations;
+                updateAnnotationsOnChart();
+            }
+            showToast(`Loaded snapshot: ${snapshot.symbol}`);
+        }, SNAPSHOT_LOAD_DELAY);
+    }
+
+    async function deleteSnapshot(snapshotId) {
+        if (!confirm('Remove this snapshot from Line-Up?')) return;
+        const storageResult = await chrome.storage.local.get('lineupSnapshots');
+        let snapshots = storageResult.lineupSnapshots || [];
+        snapshots = snapshots.filter(s => s.id !== snapshotId);
+        await chrome.storage.local.set({ lineupSnapshots: snapshots });
+        const card = document.querySelector(`[data-snapshot-id="${snapshotId}"]`);
+        if (card) card.remove();
+        showToast('Snapshot removed');
+    }
+
+    async function initLineUp() {
+        const storageResult = await chrome.storage.local.get('lineupSnapshots');
+        const snapshots = storageResult.lineupSnapshots || [];
+        snapshots.forEach(snapshot => addSnapshotCard(snapshot));
+
+        const addBtn = document.getElementById('add-to-lineup');
+        if (addBtn) addBtn.addEventListener('click', captureChartSnapshot);
+
+        const openGallery = document.getElementById('open-gallery');
+        if (openGallery) {
+            openGallery.addEventListener('click', () => {
+                chrome.tabs.create({ url: chrome.runtime.getURL('lineup-gallery.html') });
+            });
+        }
+
+        const lineupSnapshots = document.getElementById('lineup-snapshots');
+        if (lineupSnapshots) {
+            lineupSnapshots.addEventListener('click', (e) => {
+                const card = e.target.closest('.snapshot-card');
+                if (!card) return;
+                const snapshotId = card.dataset.snapshotId;
+                if (e.target.classList.contains('load-snapshot')) {
+                    loadSnapshotToChart(snapshotId);
+                } else if (e.target.classList.contains('delete-snapshot')) {
+                    deleteSnapshot(snapshotId);
+                } else {
+                    loadSnapshotToChart(snapshotId);
+                }
+            });
+        }
+    }
+
     // Load and process data
     try {
         const result = await chrome.storage.local.get(['currentAnalysis']);
@@ -775,6 +959,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         initAnnotationToolbar();
         setupAnnotationInteraction(document.getElementById('stockChart'));
         updateSROverlay();
+        initLineUp();
 
         // Hide loading
         loadingOverlay.classList.add('hidden');
