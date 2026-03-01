@@ -1,30 +1,12 @@
-// Alpha Vantage API Client
+// Twelve Data API Client with embedded free API key
 
-const API_BASE_URL = "https://www.alphavantage.co/query";
+const TWELVE_DATA_API_KEY = "demo"; // Free demo key - replace with real free key from twelvedata.com if needed
+const API_BASE_URL = "https://api.twelvedata.com";
 const CACHE_DURATION = 60 * 60 * 1000; // 1 hour in milliseconds
 
-// Get API key from storage
-async function getApiKey() {
-    return new Promise((resolve) => {
-        chrome.storage.local.get(['apiKey'], (result) => {
-            resolve(result.apiKey || null);
-        });
-    });
-}
-
-// Save API key to storage
-async function saveApiKey(apiKey) {
-    return new Promise((resolve) => {
-        chrome.storage.local.set({ apiKey: apiKey }, () => {
-            resolve();
-        });
-    });
-}
-
 // Check cache
-async function getFromCache(symbol) {
+async function getFromCache(cacheKey) {
     return new Promise((resolve) => {
-        const cacheKey = `cache_${symbol}`;
         chrome.storage.local.get([cacheKey, `${cacheKey}_timestamp`], (result) => {
             const data = result[cacheKey];
             const timestamp = result[`${cacheKey}_timestamp`];
@@ -42,9 +24,8 @@ async function getFromCache(symbol) {
 }
 
 // Save to cache
-async function saveToCache(symbol, data) {
+async function saveToCache(cacheKey, data) {
     return new Promise((resolve) => {
-        const cacheKey = `cache_${symbol}`;
         chrome.storage.local.set({
             [cacheKey]: data,
             [`${cacheKey}_timestamp`]: Date.now()
@@ -54,48 +35,48 @@ async function saveToCache(symbol, data) {
     });
 }
 
-// Fetch stock data from Alpha Vantage
-async function fetchStockData(symbol) {
-    const apiKey = await getApiKey();
-    
-    if (!apiKey) {
-        throw new Error("API_KEY_MISSING");
-    }
+// Fetch stock data from Twelve Data API
+async function fetchStockData(symbol, interval = "1day", outputsize = 500) {
+    const cacheKey = `cache_${symbol}_${interval}_${outputsize}`;
     
     // Check cache first
-    const cachedData = await getFromCache(symbol);
+    const cachedData = await getFromCache(cacheKey);
     if (cachedData) {
         return cachedData;
     }
     
-    const url = `${API_BASE_URL}?function=TIME_SERIES_DAILY&symbol=${symbol}&apikey=${apiKey}&outputsize=full`;
+    const url = `${API_BASE_URL}/time_series?symbol=${symbol}&interval=${interval}&apikey=${TWELVE_DATA_API_KEY}&outputsize=${outputsize}&format=JSON`;
     
     try {
         const response = await fetch(url);
         const data = await response.json();
         
         // Check for API errors
-        if (data["Error Message"]) {
+        if (data.code === 400 || data.code === 401 || data.code === 404) {
             throw new Error("INVALID_SYMBOL");
         }
         
-        if (data["Note"]) {
-            // Rate limit message
+        if (data.code === 429) {
             throw new Error("RATE_LIMIT");
         }
         
-        if (!data["Time Series (Daily)"]) {
+        if (data.status === "error") {
+            throw new Error("API_ERROR");
+        }
+        
+        if (!data.values || !Array.isArray(data.values)) {
             throw new Error("INVALID_RESPONSE");
         }
         
         // Save to cache
-        await saveToCache(symbol, data);
+        await saveToCache(cacheKey, data);
         
         return data;
     } catch (error) {
         if (error.message === "INVALID_SYMBOL" || 
             error.message === "RATE_LIMIT" || 
-            error.message === "INVALID_RESPONSE") {
+            error.message === "INVALID_RESPONSE" ||
+            error.message === "API_ERROR") {
             throw error;
         }
         throw new Error("NETWORK_ERROR");
@@ -104,23 +85,23 @@ async function fetchStockData(symbol) {
 
 // Parse and filter stock data by date range
 function parseStockData(apiResponse, startDate, endDate) {
-    const timeSeries = apiResponse["Time Series (Daily)"];
+    const values = apiResponse.values;
     const data = [];
     
     const start = new Date(startDate);
     const end = new Date(endDate);
     
-    for (const [date, values] of Object.entries(timeSeries)) {
-        const currentDate = new Date(date);
+    for (const candle of values) {
+        const currentDate = new Date(candle.datetime);
         
         if (currentDate >= start && currentDate <= end) {
             data.push({
-                Date: date,
-                Open: parseFloat(values["1. open"]),
-                High: parseFloat(values["2. high"]),
-                Low: parseFloat(values["3. low"]),
-                Close: parseFloat(values["4. close"]),
-                Volume: parseFloat(values["5. volume"])
+                Date: candle.datetime,
+                Open: parseFloat(candle.open),
+                High: parseFloat(candle.high),
+                Low: parseFloat(candle.low),
+                Close: parseFloat(candle.close),
+                Volume: parseFloat(candle.volume || 0)
             });
         }
     }
@@ -157,7 +138,7 @@ function validateDateRange(startDate, endDate) {
 }
 
 // Main function to get stock data
-async function getStockData(symbol, startDate, endDate) {
+async function getStockData(symbol, startDate, endDate, interval = "1day") {
     // Validate inputs
     if (!symbol || symbol.trim() === "") {
         throw new Error("EMPTY_SYMBOL");
@@ -165,8 +146,14 @@ async function getStockData(symbol, startDate, endDate) {
     
     validateDateRange(startDate, endDate);
     
+    // Calculate outputsize based on interval and date range
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const daysDiff = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+    let outputsize = Math.min(Math.max(daysDiff * 2, 100), 5000);
+    
     // Fetch data
-    const apiResponse = await fetchStockData(symbol.toUpperCase());
+    const apiResponse = await fetchStockData(symbol.toUpperCase(), interval, outputsize);
     
     // Parse and filter by date range
     const data = parseStockData(apiResponse, startDate, endDate);
@@ -177,11 +164,11 @@ async function getStockData(symbol, startDate, endDate) {
 // Error message mapping
 function getErrorMessage(errorCode) {
     const messages = {
-        "API_KEY_MISSING": "Please configure your Alpha Vantage API key in settings.",
         "INVALID_SYMBOL": "Invalid stock symbol. Please check and try again.",
-        "RATE_LIMIT": "API rate limit exceeded. Please wait a moment and try again.\n(Free tier: 5 calls/min, 25 calls/day)",
+        "RATE_LIMIT": "API rate limit exceeded. Please wait a moment and try again.\n(Free tier: 800 calls/day)",
         "NETWORK_ERROR": "Network error. Please check your connection and try again.",
         "INVALID_RESPONSE": "Unexpected API response. Please try again.",
+        "API_ERROR": "API error occurred. Please try again.",
         "NO_DATA_IN_RANGE": "No stock data available for the selected date range.",
         "INVALID_DATE_FORMAT": "Invalid date format. Please use the date picker.",
         "START_AFTER_END": "Start date must be before end date.",
@@ -194,18 +181,16 @@ function getErrorMessage(errorCode) {
 
 // Make functions available globally for browser usage
 if (typeof window !== 'undefined') {
-    window.getApiKey = getApiKey;
-    window.saveApiKey = saveApiKey;
     window.getStockData = getStockData;
     window.getErrorMessage = getErrorMessage;
+    window.fetchStockData = fetchStockData;
 }
 
 // Export for use in other modules
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
-        getApiKey,
-        saveApiKey,
         getStockData,
-        getErrorMessage
+        getErrorMessage,
+        fetchStockData
     };
 }
