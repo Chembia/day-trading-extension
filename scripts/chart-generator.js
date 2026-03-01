@@ -1,6 +1,6 @@
 // Chart Generation and Annotations using Chart.js
 
-function createCandlestickChart(canvasId, stockData, patterns) {
+function createCandlestickChart(canvasId, stockData, patterns, srLevels) {
     const ctx = document.getElementById(canvasId).getContext('2d');
     
     // Prepare data for Chart.js candlestick
@@ -14,6 +14,12 @@ function createCandlestickChart(canvasId, stockData, patterns) {
     
     // Create annotations for patterns
     const annotations = createPatternAnnotations(patterns, stockData);
+
+    // Merge S&R level annotations
+    if (srLevels && srLevels.length > 0) {
+        const srAnnotations = createSRAnnotations(srLevels);
+        Object.assign(annotations, srAnnotations);
+    }
     
     const config = {
         type: 'candlestick',
@@ -172,6 +178,39 @@ function createPatternAnnotations(patterns, stockData) {
     return annotations;
 }
 
+/**
+ * Create Chart.js annotation plugin entries for S&R levels.
+ * @param {Array} levels - array of {id, type, price, strength} objects
+ * @returns {Object} annotation config entries
+ */
+function createSRAnnotations(levels) {
+    const annotations = {};
+    (levels || []).forEach((level) => {
+        const isSup = level.type === 'support';
+        const baseColor = isSup ? '76, 175, 80' : '244, 67, 54';
+        const opacity = 0.2 + (level.strength / 10) * 0.5;
+        const width = 1 + Math.round(level.strength / 3);
+        annotations[`sr_${level.id}`] = {
+            type: 'line',
+            yMin: level.price,
+            yMax: level.price,
+            borderColor: `rgba(${baseColor}, ${opacity + 0.3})`,
+            borderWidth: width,
+            borderDash: isSup ? [] : [5, 3],
+            label: {
+                display: false,
+                content: `${isSup ? 'S' : 'R'} ${level.price} (str:${level.strength})`,
+                position: 'end',
+                backgroundColor: `rgba(${baseColor}, 0.7)`,
+                color: 'white',
+                font: { size: 9 },
+                padding: 2
+            }
+        };
+    });
+    return annotations;
+}
+
 // Zoom chart to a specific candle range
 function zoomChartToPattern(chart, stockData, centerIndex, bufferCandles) {
     if (!chart || !stockData) return;
@@ -234,6 +273,7 @@ function downloadChart(chartId, filename) {
 if (typeof window !== 'undefined') {
     window.createCandlestickChart = createCandlestickChart;
     window.createPatternAnnotations = createPatternAnnotations;
+    window.createSRAnnotations = createSRAnnotations;
     window.downloadChart = downloadChart;
     window.zoomChartToPattern = zoomChartToPattern;
     window.resetChartZoom = resetChartZoom;
@@ -245,6 +285,7 @@ if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
         createCandlestickChart,
         createPatternAnnotations,
+        createSRAnnotations,
         downloadChart,
         zoomChartToPattern,
         resetChartZoom,

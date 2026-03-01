@@ -106,6 +106,28 @@
                         </div>
                     </div>
 
+                    <!-- Support & Resistance Controls -->
+                    <div class="sr-section">
+                        <div class="sr-header">
+                            <span class="sr-title">Support &amp; Resistance</span>
+                            <span class="sr-info-icon" title="Support is where price tends to stop falling. Resistance is where price tends to stop rising. These levels help identify potential entry and exit points.">ⓘ</span>
+                        </div>
+                        <div class="sr-controls">
+                            <label class="sr-checkbox-label">
+                                <input type="checkbox" id="sr-show-levels" checked>
+                                Show Levels
+                            </label>
+                            <div class="sr-slider-group">
+                                <label for="sr-sensitivity">Sensitivity: <span id="sr-sensitivity-value">5</span></label>
+                                <input type="range" id="sr-sensitivity" min="1" max="10" value="5" class="sr-slider">
+                            </div>
+                            <div class="sr-slider-group">
+                                <label for="sr-min-strength">Min Strength: <span id="sr-min-strength-value">2</span></label>
+                                <input type="range" id="sr-min-strength" min="1" max="10" value="2" class="sr-slider">
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Pattern List -->
                     <div id="sidebar-pattern-list" class="sidebar-pattern-list">
                         <!-- Populated by JS -->
@@ -128,6 +150,7 @@
                             </div>
                         </div>
                         <div class="chart-wrapper">
+                            <div id="annotation-toolbar-container" class="annotation-toolbar-container"></div>
                             <canvas id="stockChart"></canvas>
                         </div>
                         <!-- Zoom Controls -->
@@ -301,6 +324,9 @@
     <script src="../scripts/api-client.js"></script>
     <script src="../scripts/fluey-algorithm.js"></script>
     <script src="../scripts/pattern-filter.js"></script>
+    <script src="../scripts/support-resistance.js"></script>
+    <script src="../scripts/chart-annotations.js"></script>
+    <script src="../scripts/annotation-toolbar.js"></script>
     <script src="../scripts/chart-generator.js"></script>
     <script src="../scripts/notebook-manager.js"></script>
     <script src="../scripts/theme-manager.js"></script>

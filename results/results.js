@@ -78,10 +78,177 @@ document.addEventListener('DOMContentLoaded', async () => {
     let currentStockData = [];
     let currentAnalysisInfo = {};
     let activeZoomPatternIndex = null;
+    let currentAnnotations = [];
+    let currentSymbol = '';
+    let activeTool = null;
+    let trendLineStart = null;
+    let srLevels = [];
+    let srVisible = true;
 
     // ---- Theme ----
     const theme = await ThemeManager.init();
     ThemeManager.setupToggle(theme);
+
+    // ---- Annotation Toolbar Setup ----
+    function initAnnotationToolbar() {
+        createAnnotationToolbar('annotation-toolbar-container', (toolId) => {
+            activeTool = toolId === activeTool ? null : toolId;
+            if (activeTool === null) clearActiveTool();
+        });
+    }
+
+    // ---- Annotation Canvas Interaction ----
+    function setupAnnotationInteraction(canvas) {
+        if (!canvas) return;
+        canvas.addEventListener('click', async (e) => {
+            if (!activeTool || activeTool === 'select' || activeTool === 'delete') return;
+            if (!currentStockData || currentStockData.length === 0) return;
+
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+
+            // Map pixel x to candle index
+            const xScale = chart && chart.scales && chart.scales.x;
+            const yScale = chart && chart.scales && chart.scales.y;
+            if (!xScale || !yScale) return;
+
+            const xIndex = Math.round(xScale.getValueForPixel(x));
+            const yPixel = e.clientY - rect.top;
+            const price = yScale.getValueForPixel(yPixel);
+
+            if (xIndex < 0 || xIndex >= currentStockData.length) return;
+            const timestamp = currentStockData[xIndex] ? currentStockData[xIndex].Date : String(xIndex);
+
+            if (activeTool === 'horizontal_line') {
+                currentAnnotations = addAnnotation(currentAnnotations, 'horizontal_line', { timestamp, price });
+                await saveAnnotations(currentSymbol, currentAnnotations);
+                updateAnnotationsOnChart();
+            } else if (activeTool === 'trend_line') {
+                if (!trendLineStart) {
+                    trendLineStart = { timestamp, price };
+                } else {
+                    currentAnnotations = addAnnotation(currentAnnotations, 'trend_line', {
+                        timestamp: trendLineStart.timestamp,
+                        price: trendLineStart.price,
+                        endTimestamp: timestamp,
+                        endPrice: price
+                    });
+                    trendLineStart = null;
+                    await saveAnnotations(currentSymbol, currentAnnotations);
+                    updateAnnotationsOnChart();
+                }
+            } else if (activeTool === 'text_note') {
+                const text = window.prompt('Enter note text:');
+                if (text) {
+                    currentAnnotations = addAnnotation(currentAnnotations, 'text_note', { timestamp, price, text });
+                    await saveAnnotations(currentSymbol, currentAnnotations);
+                    updateAnnotationsOnChart();
+                }
+            }
+        });
+
+        // Delete annotation on click when delete tool is active
+        canvas.addEventListener('click', async (e) => {
+            if (activeTool !== 'delete') return;
+            if (!chart || currentAnnotations.length === 0) return;
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            const xScale = chart.scales.x;
+            const yScale = chart.scales.y;
+            if (!xScale || !yScale) return;
+            const clickX = xScale.getValueForPixel(x);
+            const clickY = yScale.getValueForPixel(y);
+
+            // Find closest annotation
+            let closest = null;
+            let minDist = Infinity;
+            currentAnnotations.forEach(ann => {
+                const annXIndex = currentStockData.findIndex(d => d.Date === ann.timestamp);
+                const dx = (annXIndex < 0 ? 0 : annXIndex) - clickX;
+                const dy = ann.price - clickY;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist < minDist) {
+                    minDist = dist;
+                    closest = ann;
+                }
+            });
+            // Threshold: 5% of x-range + 3% of y-range
+            const X_THRESHOLD_RATIO = 0.05;
+            const Y_THRESHOLD_RATIO = 0.03;
+            const threshold = (xScale.max - xScale.min) * X_THRESHOLD_RATIO + Math.abs(yScale.max - yScale.min) * Y_THRESHOLD_RATIO;
+            if (closest && minDist < threshold) {
+                currentAnnotations = deleteAnnotation(currentAnnotations, closest.id);
+                await saveAnnotations(currentSymbol, currentAnnotations);
+                updateAnnotationsOnChart();
+            }
+        });
+
+        // Delete key to remove last annotation or selected
+        canvas.addEventListener('keydown', async (e) => {
+            if ((e.key === 'Delete' || e.key === 'Backspace') && currentAnnotations.length > 0) {
+                const last = currentAnnotations[currentAnnotations.length - 1];
+                currentAnnotations = deleteAnnotation(currentAnnotations, last.id);
+                await saveAnnotations(currentSymbol, currentAnnotations);
+                updateAnnotationsOnChart();
+            }
+        });
+        canvas.setAttribute('tabindex', '0');
+    }
+
+    function updateAnnotationsOnChart() {
+        if (!chart) return;
+        const annConfig = renderAnnotations(chart, currentAnnotations, currentStockData);
+        // Rebuild all annotations: patterns + S&R + user annotations
+        const patternAnns = createPatternAnnotations(
+            (chart._lastFilteredPatterns || []), currentStockData
+        );
+        const srAnns = srVisible && srLevels.length > 0
+            ? createSRAnnotations(srLevels)
+            : {};
+        chart.options.plugins.annotation.annotations = Object.assign({}, patternAnns, srAnns, annConfig);
+        chart.update('none');
+    }
+
+    // ---- Support & Resistance Controls ----
+    const srShowLevels = document.getElementById('sr-show-levels');
+    const srSensitivity = document.getElementById('sr-sensitivity');
+    const srSensitivityValue = document.getElementById('sr-sensitivity-value');
+    const srMinStrength = document.getElementById('sr-min-strength');
+    const srMinStrengthValue = document.getElementById('sr-min-strength-value');
+
+    function updateSROverlay() {
+        if (!currentStockData || currentStockData.length === 0) return;
+        const sensitivity = srSensitivity ? parseInt(srSensitivity.value) : 5;
+        const minStrength = srMinStrength ? parseInt(srMinStrength.value) : 2;
+        // sensitivity slider: 1=high tolerance(~1%), 10=tight(~0.1%), inverse relationship
+        const clusterTolerance = 1.1 - (sensitivity / 10);
+        const srResult = detectSupportResistance(currentStockData, {
+            clusterTolerance: parseFloat(clusterTolerance.toFixed(2)),
+            minTouches: 2
+        });
+        srLevels = (srResult.levels || []).filter(l => l.strength >= minStrength);
+        updateAnnotationsOnChart();
+    }
+
+    if (srShowLevels) {
+        srShowLevels.addEventListener('change', () => {
+            srVisible = srShowLevels.checked;
+            updateAnnotationsOnChart();
+        });
+    }
+    if (srSensitivity) {
+        srSensitivity.addEventListener('input', () => {
+            if (srSensitivityValue) srSensitivityValue.textContent = srSensitivity.value;
+            updateSROverlay();
+        });
+    }
+    if (srMinStrength) {
+        srMinStrength.addEventListener('input', () => {
+            if (srMinStrengthValue) srMinStrengthValue.textContent = srMinStrength.value;
+            updateSROverlay();
+        });
+    }
 
     // ---- Sidebar Toggle ----
     async function loadSidebarPref() {
@@ -369,11 +536,15 @@ document.addEventListener('DOMContentLoaded', async () => {
             displayPatterns(filtered);
 
             if (!chart) {
-                chart = createCandlestickChart('stockChart', currentStockData, filtered);
+                chart = createCandlestickChart('stockChart', currentStockData, filtered, srLevels);
+                chart._lastFilteredPatterns = filtered;
             } else {
+                chart._lastFilteredPatterns = filtered;
                 // Rebuild annotations for filtered set
-                const annotations = createPatternAnnotations(filtered, currentStockData);
-                chart.options.plugins.annotation.annotations = annotations;
+                const patternAnns = createPatternAnnotations(filtered, currentStockData);
+                const srAnns = srVisible && srLevels.length > 0 ? createSRAnnotations(srLevels) : {};
+                const userAnns = renderAnnotations(chart, currentAnnotations, currentStockData);
+                chart.options.plugins.annotation.annotations = Object.assign({}, patternAnns, srAnns, userAnns);
                 chart.update('none');
             }
         }
@@ -547,6 +718,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                 dateRange.textContent = `${formatTimestamp(startDate)} to ${formatTimestamp(endDate)}`;
 
                 runAnalysis(newData);
+                currentSymbol = symbol;
+                currentAnnotations = await loadAnnotations(symbol);
+                updateSROverlay();
+                updateAnnotationsOnChart();
             } catch (error) {
                 showReanalysisError(getErrorMessage(error.message));
             } finally {
@@ -593,6 +768,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // Run analysis
         runAnalysis(data);
+
+        // Load annotations for this symbol
+        currentSymbol = symbol;
+        currentAnnotations = await loadAnnotations(symbol);
+        initAnnotationToolbar();
+        setupAnnotationInteraction(document.getElementById('stockChart'));
+        updateSROverlay();
 
         // Hide loading
         loadingOverlay.classList.add('hidden');
