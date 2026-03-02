@@ -1,6 +1,7 @@
 // Results Page JavaScript
 
 const MAX_SAVED_PATTERNS = 5;
+const LINEUP_TRANSITION_MS = 300;
 
 document.addEventListener('DOMContentLoaded', async () => {
     // DOM Elements
@@ -105,6 +106,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             activeTool = toolId === activeTool ? null : toolId;
             if (activeTool === null) clearActiveTool();
         });
+        // Set select tool as default
+        activeTool = 'select';
+        setActiveTool('select');
     }
 
     // ---- Annotation Canvas Interaction ----
@@ -483,16 +487,23 @@ document.addEventListener('DOMContentLoaded', async () => {
     async function initLineupToggle() {
         const lineupHidden = await loadLineupPref();
         if (lineupHidden) {
-            resultsContainer.classList.add('lineup-hidden');
+            document.body.classList.add('lineup-hidden');
         }
         updateLineupToggleIcon(lineupHidden);
 
         const toggle = document.getElementById('lineup-toggle');
         if (toggle) {
             toggle.addEventListener('click', async () => {
-                const isHidden = resultsContainer.classList.toggle('lineup-hidden');
+                const isHidden = document.body.classList.toggle('lineup-hidden');
                 updateLineupToggleIcon(isHidden);
                 await saveLineupPref(isHidden);
+                // Resize chart after layout transition completes
+                setTimeout(() => {
+                    if (chart) {
+                        chart.resize();
+                        chart.update('none');
+                    }
+                }, LINEUP_TRANSITION_MS + 50);
             });
         }
     }
