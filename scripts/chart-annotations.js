@@ -37,7 +37,8 @@ async function loadAnnotations(symbol) {
  */
 async function saveAnnotations(symbol, annotations) {
     const key = ANNOTATIONS_STORAGE_KEY_PREFIX + symbol.toUpperCase();
-    const limited = annotations.slice(0, MAX_ANNOTATIONS_PER_SYMBOL);
+    const safeAnnotations = Array.isArray(annotations) ? annotations : [];
+    const limited = safeAnnotations.slice(0, MAX_ANNOTATIONS_PER_SYMBOL);
     return new Promise((resolve) => {
         if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
             chrome.storage.local.set({ [key]: limited }, resolve);
@@ -53,9 +54,12 @@ async function saveAnnotations(symbol, annotations) {
  * @param {string} type - 'horizontal_line' | 'trend_line' | 'text_note'
  * @param {Object} coords - { timestamp, price, endTimestamp?, endPrice?, text? }
  * @param {Object} style - { color?, lineWidth? }
- * @returns {Object} the new annotation
+ * @returns {Array} the updated annotations array
  */
 function addAnnotation(annotations, type, coords, style = {}) {
+    if (!Array.isArray(annotations)) {
+        annotations = [];
+    }
     const ann = {
         id: _generateAnnotationId(),
         type,
@@ -73,7 +77,7 @@ function addAnnotation(annotations, type, coords, style = {}) {
         ann.text = coords.text || '';
     }
     annotations.push(ann);
-    return ann;
+    return annotations;
 }
 
 /**
@@ -109,7 +113,7 @@ function moveAnnotation(annotations, id, newCoords) {
  * @returns {Object} annotation plugin config object
  */
 function renderAnnotations(chart, annotations, stockData) {
-    if (!chart || !annotations) return {};
+    if (!chart || !Array.isArray(annotations)) return {};
 
     // Build timestamp → index map
     const tsToIndex = {};
