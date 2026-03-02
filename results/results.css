@@ -59,12 +59,6 @@ body.lineup-hidden {
     font-size: 14px;
 }
 
-.sidebar-toggle-btn {
-    width: auto !important;
-    padding: 10px 16px !important;
-    font-size: 13px !important;
-}
-
 /* Control Bar */
 .control-bar {
     display: flex;
@@ -1215,28 +1209,69 @@ body.lineup-hidden {
     opacity: 1;
 }
 
-/* Line-Up Toggle Button */
+/* Sidebar toggle button - fixed left side */
+#sidebar-toggle {
+    position: fixed;
+    top: 90px;
+    left: 20px;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.9);
+    border: 2px solid rgba(182, 182, 182, 0.4);
+    border-radius: 12px;
+    cursor: pointer;
+    z-index: 1001;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    padding: 0;
+    font-size: 18px;
+}
+
+/* Line-Up Toggle Button - right side, same height as sidebar toggle */
 .lineup-toggle {
     position: fixed;
-    top: 100px;
+    top: 90px;
     right: 20px;
     width: 48px;
     height: 48px;
     display: flex;
     align-items: center;
     justify-content: center;
+    background: rgba(255, 255, 255, 0.9);
+    border: 2px solid rgba(182, 182, 182, 0.4);
+    border-radius: 12px;
     cursor: pointer;
     z-index: 1001;
-    border: 1.5px solid rgba(182, 182, 182, 0.3);
     padding: 0;
     transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     font-size: 18px;
 }
 
+#sidebar-toggle:hover,
 .lineup-toggle:hover {
-    background: rgba(208, 250, 249, 0.3) !important;
-    border-color: rgba(208, 250, 249, 0.5) !important;
-    transform: none;
+    background: rgba(208, 250, 249, 0.9) !important;
+    border-color: rgba(208, 250, 249, 0.8) !important;
+    transform: scale(1.05);
+}
+
+#sidebar-toggle:active,
+.lineup-toggle:active {
+    transform: scale(0.95);
+}
+
+[data-theme="dark"] #sidebar-toggle,
+[data-theme="dark"] .lineup-toggle {
+    background: rgba(44, 44, 44, 0.9);
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+[data-theme="dark"] #sidebar-toggle:hover,
+[data-theme="dark"] .lineup-toggle:hover {
+    background: rgba(208, 250, 249, 0.2) !important;
 }
 
 /* Line-up hidden state */
