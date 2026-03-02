@@ -51,7 +51,7 @@ async function saveAnnotations(symbol, annotations) {
 /**
  * Add a new annotation.
  * @param {Array} annotations - current annotations array
- * @param {string} type - 'horizontal_line' | 'trend_line' | 'text_note'
+ * @param {string} type - 'horizontal_line' | 'trend_line' | 'arrow' | 'text_note'
  * @param {Object} coords - { timestamp, price, endTimestamp?, endPrice?, text? }
  * @param {Object} style - { color?, lineWidth? }
  * @returns {Array} the updated annotations array
@@ -69,7 +69,7 @@ function addAnnotation(annotations, type, coords, style = {}) {
         lineWidth: style.lineWidth || 2,
         createdAt: new Date().toISOString()
     };
-    if (type === 'trend_line') {
+    if (type === 'trend_line' || type === 'arrow') {
         ann.endTimestamp = coords.endTimestamp;
         ann.endPrice = coords.endPrice;
     }
@@ -151,7 +151,7 @@ function renderAnnotations(chart, annotations, stockData) {
                     display: false
                 }
             };
-        } else if (ann.type === 'trend_line') {
+        } else if (ann.type === 'trend_line' || ann.type === 'arrow') {
             let x2Index = tsToIndex[ann.endTimestamp];
             if (x2Index === undefined) {
                 let nearest = 0;
@@ -174,6 +174,18 @@ function renderAnnotations(chart, annotations, stockData) {
                     display: false
                 }
             };
+            if (ann.type === 'arrow') {
+                chartAnnotations[`${key}_arrowhead`] = {
+                    type: 'point',
+                    xValue: x2Index,
+                    yValue: ann.endPrice,
+                    backgroundColor: ann.color || '#FF6B6B',
+                    borderColor: ann.color || '#FF6B6B',
+                    borderWidth: 0,
+                    radius: 8,
+                    pointStyle: 'triangle'
+                };
+            }
         } else if (ann.type === 'text_note') {
             chartAnnotations[key] = {
                 type: 'label',
@@ -298,7 +310,7 @@ function isPointNearAnnotation(annotation, clickX, clickY, threshold = 10) {
 
     if (annotation.type === 'horizontal_line') {
         return Math.abs(clickY - annY) < threshold;
-    } else if (annotation.type === 'trend_line') {
+    } else if (annotation.type === 'trend_line' || annotation.type === 'arrow') {
         return isPointNearLineSegment(
             clickX, clickY,
             annX, annY,

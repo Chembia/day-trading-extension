@@ -15,12 +15,17 @@
 </head>
 <body>
     <div id="resultsContainer" class="results-container">
+        <!-- Sidebar toggle - fixed left side -->
+        <button id="sidebar-toggle" class="glass-button" title="Toggle Sidebar">
+            <span id="sidebar-toggle-icon">✕</span>
+        </button>
+
+        <!-- Line-Up Toggle Button - fixed right side, same height as sidebar toggle -->
+        <button id="lineup-toggle" class="lineup-toggle glass-container" title="Toggle Line-Up">
+            <span id="lineup-toggle-icon">✕</span>
+        </button>
+
         <header class="results-header glass-container">
-            <div class="header-left">
-                <button id="sidebar-toggle" class="glass-button sidebar-toggle-btn" title="Toggle Sidebar">
-                    <span id="sidebar-toggle-icon">✕</span> Sidebar
-                </button>
-            </div>
             <div class="header-content">
                 <h1 id="stockTitle">Loading...</h1>
                 <p id="dateRange" class="date-range"></p>
@@ -199,11 +204,6 @@
 
     <!-- Help Button -->
     <button id="help-toggle" class="help-button" title="Help">❓</button>
-
-    <!-- Line-Up Toggle Button -->
-    <button id="lineup-toggle" class="lineup-toggle glass-container" title="Toggle Line-Up">
-        <span id="lineup-toggle-icon">✕</span>
-    </button>
 
     <!-- Line-Up Container -->
     <div id="lineup-container" class="glass-container">

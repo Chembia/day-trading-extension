@@ -4,6 +4,7 @@ const ANNOTATION_TOOLS = [
     { id: 'select', label: '↖', title: 'Select/Move tool – Click to move or edit your annotations' },
     { id: 'horizontal_line', label: '―', title: 'Horizontal Line – Draw a horizontal line to mark important price levels' },
     { id: 'trend_line', label: '/', title: 'Trend Line – Connect two points to identify trend direction' },
+    { id: 'arrow', label: '→', title: 'Arrow – Draw an arrow to highlight a price move or direction' },
     { id: 'text_note', label: 'A', title: 'Text Note – Add a note to remember why this area is important' },
     { id: 'delete', label: '🗑', title: 'Delete – Remove an annotation' }
 ];

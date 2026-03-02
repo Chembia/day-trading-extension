@@ -205,7 +205,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 borderWidth: 2,
                 borderDash: [5, 5]
             };
-        } else if (activeTool === 'trend_line') {
+        } else if (activeTool === 'trend_line' || activeTool === 'arrow') {
             annConfig['preview_line'] = {
                 type: 'line',
                 xMin: start.xIndex,
@@ -216,6 +216,18 @@ document.addEventListener('DOMContentLoaded', async () => {
                 borderWidth: 2,
                 borderDash: [5, 5]
             };
+            if (activeTool === 'arrow') {
+                annConfig['preview_line_arrowhead'] = {
+                    type: 'point',
+                    xValue: current.xIndex,
+                    yValue: current.price,
+                    backgroundColor: 'rgba(208, 250, 249, 0.7)',
+                    borderColor: 'rgba(208, 250, 249, 0.7)',
+                    borderWidth: 0,
+                    radius: 8,
+                    pointStyle: 'triangle'
+                };
+            }
         }
         chart.update('none');
     }
@@ -225,6 +237,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Remove preview
         if (chart && chart.options.plugins.annotation.annotations) {
             delete chart.options.plugins.annotation.annotations['preview_line'];
+            delete chart.options.plugins.annotation.annotations['preview_line_arrowhead'];
         }
         saveToHistory();
         if (activeTool === 'horizontal_line') {
@@ -240,6 +253,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                 endPrice: end.price
             });
             trendLineStart = null;
+        } else if (activeTool === 'arrow') {
+            currentAnnotations = addAnnotation(currentAnnotations, 'arrow', {
+                timestamp: start.timestamp,
+                price: start.price,
+                endTimestamp: end.timestamp,
+                endPrice: end.price
+            });
         }
         saveAnnotations(currentSymbol, currentAnnotations);
         updateAnnotationsOnChart();
@@ -250,6 +270,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         let pointerDown = false;
         let dragOffset = { x: 0, y: 0 };
+        let dragStartCoords = null;
+        let dragStartSnapshot = null;
 
         function handlePointerDown(e) {
             if (activeTool === null || activeTool === undefined) return;
@@ -272,12 +294,21 @@ document.addEventListener('DOMContentLoaded', async () => {
                     } else {
                         dragOffset.x = coords.x - (selectedAnnotation.xPixel || 0);
                         dragOffset.y = coords.y - (selectedAnnotation.yPixel || 0);
+                        dragStartCoords = { xIndex: coords.xIndex, price: coords.price };
+                        const snapStartXIndex = currentStockData.findIndex(d => d.Date === selectedAnnotation.timestamp);
+                        const snapEndXIndex = selectedAnnotation.endTimestamp
+                            ? currentStockData.findIndex(d => d.Date === selectedAnnotation.endTimestamp)
+                            : -1;
+                        dragStartSnapshot = Object.assign(JSON.parse(JSON.stringify(selectedAnnotation)), {
+                            _startXIndex: snapStartXIndex,
+                            _endXIndex: snapEndXIndex
+                        });
                     }
                 }
             } else if (activeTool === 'delete') {
                 const ann = findAnnotationAtPoint(coords.x, coords.y);
                 if (ann) deleteSelectedAnnotation(ann);
-            } else if (activeTool === 'horizontal_line' || activeTool === 'trend_line') {
+            } else if (activeTool === 'horizontal_line' || activeTool === 'trend_line' || activeTool === 'arrow') {
                 isDrawing = true;
                 drawingStart = coords;
             } else if (activeTool === 'text_note') {
@@ -303,9 +334,25 @@ document.addEventListener('DOMContentLoaded', async () => {
             const coords = getCanvasCoords(canvas, e);
             if (!coords) return;
 
-            if (activeTool === 'select' && selectedAnnotation) {
-                selectedAnnotation.timestamp = coords.timestamp;
-                selectedAnnotation.price = coords.price;
+            if (activeTool === 'select' && selectedAnnotation && dragStartCoords && dragStartSnapshot) {
+                // Compute delta from drag start
+                const deltaXIndex = coords.xIndex - dragStartCoords.xIndex;
+                const deltaPrice = coords.price - dragStartCoords.price;
+
+                // Move start point using cached index
+                const newStartXIndex = dragStartSnapshot._startXIndex + deltaXIndex;
+                const clampedStartXIndex = Math.max(0, Math.min(currentStockData.length - 1, newStartXIndex));
+                selectedAnnotation.timestamp = currentStockData[clampedStartXIndex].Date;
+                selectedAnnotation.price = dragStartSnapshot.price + deltaPrice;
+
+                // Move end point for trend_line and arrow using cached index
+                if ((selectedAnnotation.type === 'trend_line' || selectedAnnotation.type === 'arrow') && dragStartSnapshot._endXIndex >= 0) {
+                    const newEndXIndex = dragStartSnapshot._endXIndex + deltaXIndex;
+                    const clampedEndXIndex = Math.max(0, Math.min(currentStockData.length - 1, newEndXIndex));
+                    selectedAnnotation.endTimestamp = currentStockData[clampedEndXIndex].Date;
+                    selectedAnnotation.endPrice = dragStartSnapshot.endPrice + deltaPrice;
+                }
+
                 updateAnnotationsOnChart();
             } else if (isDrawing && drawingStart) {
                 drawLinePreview(drawingStart, coords);
@@ -321,6 +368,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 // Remove preview if pointer left canvas
                 if (chart && chart.options.plugins.annotation.annotations) {
                     delete chart.options.plugins.annotation.annotations['preview_line'];
+                    delete chart.options.plugins.annotation.annotations['preview_line_arrowhead'];
                     chart.update('none');
                 }
             }
@@ -332,6 +380,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             isDrawing = false;
             drawingStart = null;
             pointerDown = false;
+            dragStartCoords = null;
+            dragStartSnapshot = null;
         }
 
         // Mouse events
