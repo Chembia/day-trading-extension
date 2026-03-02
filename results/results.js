@@ -702,13 +702,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <div class="pattern-date">${formattedDate}</div>
                 <div class="pattern-confidence">
                     <div class="confidence-bar">
-                        <div class="confidence-fill" style="width: ${pattern.confidence}%"></div>
+                        <div class="confidence-fill"></div>
                     </div>
                     <span class="confidence-value">${pattern.confidence}%</span>
                 </div>
                 <div class="pattern-type ${pattern.type}">${pattern.type.toUpperCase()}</div>
                 <div class="pattern-action ${action.toLowerCase().replace(' ', '-')}">${action}</div>
             `;
+            row.querySelector('.confidence-fill').style.width = `${pattern.confidence}%`;
             
             patternsTable.appendChild(row);
         });

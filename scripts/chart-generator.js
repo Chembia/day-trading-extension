@@ -111,6 +111,10 @@ function createCandlestickChart(canvasId, stockData, patterns, srLevels) {
 }
 
 function createPatternAnnotations(patterns, stockData) {
+    if (!Array.isArray(patterns)) {
+        console.warn('createPatternAnnotations: patterns is not an array', patterns);
+        return {};
+    }
     const annotations = {};
     const isDark = typeof document !== 'undefined' &&
         document.body && document.body.dataset.theme === 'dark';
