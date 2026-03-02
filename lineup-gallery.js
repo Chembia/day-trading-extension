@@ -91,14 +91,14 @@ function initTheme() {
 
     chrome.storage.local.get('theme', (result) => {
         const theme = result.theme || 'light';
-        document.body.dataset.theme = theme;
+        document.documentElement.setAttribute('data-theme', theme);
         updateThemeToggle(theme);
     });
 
     toggle.addEventListener('click', () => {
-        const currentTheme = document.body.dataset.theme;
+        const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
         const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-        document.body.dataset.theme = newTheme;
+        document.documentElement.setAttribute('data-theme', newTheme);
         chrome.storage.local.set({ theme: newTheme });
         updateThemeToggle(newTheme);
     });

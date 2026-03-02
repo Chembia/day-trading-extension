@@ -85,6 +85,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     let srLevels = [];
     let srVisible = true;
 
+    // Annotation interaction state
+    let selectedAnnotation = null;
+    let isDrawing = false;
+    let drawingStart = null;
+    let lastTapTime = 0;
+    let annotationHistory = [];
+    let historyIndex = -1;
+    const MAX_HISTORY = 50;
+    const DOUBLE_TAP_DELAY = 300;
+
     // ---- Theme ----
     const theme = await ThemeManager.init();
     ThemeManager.setupToggle(theme);
@@ -98,99 +108,255 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // ---- Annotation Canvas Interaction ----
+    function getCanvasCoords(canvas, e) {
+        const rect = canvas.getBoundingClientRect();
+        const clientX = e.clientX !== undefined ? e.clientX : (e.touches && e.touches[0] ? e.touches[0].clientX : null);
+        const clientY = e.clientY !== undefined ? e.clientY : (e.touches && e.touches[0] ? e.touches[0].clientY : null);
+        if (clientX === null || clientY === null) return null;
+
+        const x = clientX - rect.left;
+        const y = clientY - rect.top;
+
+        const xScale = chart && chart.scales && chart.scales.x;
+        const yScale = chart && chart.scales && chart.scales.y;
+        if (!xScale || !yScale) return null;
+
+        const xIndex = Math.round(xScale.getValueForPixel(x));
+        const price = yScale.getValueForPixel(y);
+
+        if (!currentStockData || currentStockData.length === 0) return null;
+        if (xIndex < 0 || xIndex >= currentStockData.length) return null;
+
+        const timestamp = currentStockData[xIndex] ? currentStockData[xIndex].Date : String(xIndex);
+        return { x, y, xIndex, price, timestamp };
+    }
+
+    function updateAnnotationPixelCoords(ann) {
+        if (!chart || !chart.scales) return;
+        const xScale = chart.scales.x;
+        const yScale = chart.scales.y;
+        const xIndex = currentStockData.findIndex(d => d.Date === ann.timestamp);
+        if (xIndex >= 0) {
+            ann.xPixel = xScale.getPixelForValue(xIndex);
+            ann.yPixel = yScale.getPixelForValue(ann.price);
+        }
+        if (ann.endTimestamp) {
+            const endXIndex = currentStockData.findIndex(d => d.Date === ann.endTimestamp);
+            if (endXIndex >= 0) {
+                ann.endXPixel = xScale.getPixelForValue(endXIndex);
+                ann.endYPixel = yScale.getPixelForValue(ann.endPrice);
+            }
+        }
+    }
+
+    function findAnnotationAtPoint(x, y) {
+        if (!Array.isArray(currentAnnotations)) return null;
+        for (let i = currentAnnotations.length - 1; i >= 0; i--) {
+            const ann = currentAnnotations[i];
+            updateAnnotationPixelCoords(ann);
+            if (isPointNearAnnotation(ann, x, y, 15)) {
+                return ann;
+            }
+        }
+        return null;
+    }
+
+    function showDeleteConfirmation(ann) {
+        const confirmDiv = document.createElement('div');
+        confirmDiv.className = 'delete-confirmation glass-container';
+        confirmDiv.innerHTML = `
+            <p>Delete this annotation?</p>
+            <button class="btn-danger" id="confirm-delete-yes">Yes</button>
+            <button class="btn-secondary-action" id="confirm-delete-no">No</button>
+        `;
+        document.body.appendChild(confirmDiv);
+        document.getElementById('confirm-delete-yes').onclick = () => {
+            deleteSelectedAnnotation(ann);
+            confirmDiv.remove();
+        };
+        document.getElementById('confirm-delete-no').onclick = () => {
+            confirmDiv.remove();
+        };
+        setTimeout(() => { if (confirmDiv.parentNode) confirmDiv.remove(); }, 5000);
+    }
+
+    function deleteSelectedAnnotation(ann) {
+        if (!Array.isArray(currentAnnotations)) return;
+        saveToHistory();
+        currentAnnotations = deleteAnnotation(currentAnnotations, ann.id);
+        saveAnnotations(currentSymbol, currentAnnotations);
+        updateAnnotationsOnChart();
+        selectedAnnotation = null;
+    }
+
+    function drawLinePreview(start, current) {
+        if (!chart) return;
+        const annConfig = chart.options.plugins.annotation.annotations || {};
+        if (activeTool === 'horizontal_line') {
+            annConfig['preview_line'] = {
+                type: 'line',
+                yMin: start.price,
+                yMax: start.price,
+                borderColor: 'rgba(208, 250, 249, 0.7)',
+                borderWidth: 2,
+                borderDash: [5, 5]
+            };
+        } else if (activeTool === 'trend_line') {
+            annConfig['preview_line'] = {
+                type: 'line',
+                xMin: start.xIndex,
+                xMax: current.xIndex,
+                yMin: start.price,
+                yMax: current.price,
+                borderColor: 'rgba(208, 250, 249, 0.7)',
+                borderWidth: 2,
+                borderDash: [5, 5]
+            };
+        }
+        chart.update('none');
+    }
+
+    function finishDrawingLine(start, end) {
+        if (!Array.isArray(currentAnnotations)) currentAnnotations = [];
+        // Remove preview
+        if (chart && chart.options.plugins.annotation.annotations) {
+            delete chart.options.plugins.annotation.annotations['preview_line'];
+        }
+        saveToHistory();
+        if (activeTool === 'horizontal_line') {
+            currentAnnotations = addAnnotation(currentAnnotations, 'horizontal_line', {
+                timestamp: start.timestamp,
+                price: start.price
+            });
+        } else if (activeTool === 'trend_line') {
+            currentAnnotations = addAnnotation(currentAnnotations, 'trend_line', {
+                timestamp: start.timestamp,
+                price: start.price,
+                endTimestamp: end.timestamp,
+                endPrice: end.price
+            });
+            trendLineStart = null;
+        }
+        saveAnnotations(currentSymbol, currentAnnotations);
+        updateAnnotationsOnChart();
+    }
+
     function setupAnnotationInteraction(canvas) {
         if (!canvas) return;
-        canvas.addEventListener('click', async (e) => {
-            if (!activeTool || activeTool === 'select' || activeTool === 'delete') return;
-            if (!currentStockData || currentStockData.length === 0) return;
 
-            const rect = canvas.getBoundingClientRect();
-            const x = e.clientX - rect.left;
+        let pointerDown = false;
+        let dragOffset = { x: 0, y: 0 };
 
-            // Map pixel x to candle index
-            const xScale = chart && chart.scales && chart.scales.x;
-            const yScale = chart && chart.scales && chart.scales.y;
-            if (!xScale || !yScale) return;
+        function handlePointerDown(e) {
+            if (activeTool === null || activeTool === undefined) return;
+            e.preventDefault();
+            const coords = getCanvasCoords(canvas, e);
+            if (!coords) return;
 
-            const xIndex = Math.round(xScale.getValueForPixel(x));
-            const yPixel = e.clientY - rect.top;
-            const price = yScale.getValueForPixel(yPixel);
+            pointerDown = true;
 
-            if (xIndex < 0 || xIndex >= currentStockData.length) return;
-            const timestamp = currentStockData[xIndex] ? currentStockData[xIndex].Date : String(xIndex);
+            // Double-tap detection
+            const now = Date.now();
+            const isDoubleTap = (now - lastTapTime) < DOUBLE_TAP_DELAY;
+            lastTapTime = now;
 
-            if (activeTool === 'horizontal_line') {
-                currentAnnotations = addAnnotation(currentAnnotations, 'horizontal_line', { timestamp, price });
-                await saveAnnotations(currentSymbol, currentAnnotations);
-                updateAnnotationsOnChart();
-            } else if (activeTool === 'trend_line') {
-                if (!trendLineStart) {
-                    trendLineStart = { timestamp, price };
-                } else {
-                    currentAnnotations = addAnnotation(currentAnnotations, 'trend_line', {
-                        timestamp: trendLineStart.timestamp,
-                        price: trendLineStart.price,
-                        endTimestamp: timestamp,
-                        endPrice: price
-                    });
-                    trendLineStart = null;
-                    await saveAnnotations(currentSymbol, currentAnnotations);
-                    updateAnnotationsOnChart();
+            if (activeTool === 'select') {
+                selectedAnnotation = findAnnotationAtPoint(coords.x, coords.y);
+                if (selectedAnnotation) {
+                    if (isDoubleTap) {
+                        showDeleteConfirmation(selectedAnnotation);
+                    } else {
+                        dragOffset.x = coords.x - (selectedAnnotation.xPixel || 0);
+                        dragOffset.y = coords.y - (selectedAnnotation.yPixel || 0);
+                    }
                 }
+            } else if (activeTool === 'delete') {
+                const ann = findAnnotationAtPoint(coords.x, coords.y);
+                if (ann) deleteSelectedAnnotation(ann);
+            } else if (activeTool === 'horizontal_line' || activeTool === 'trend_line') {
+                isDrawing = true;
+                drawingStart = coords;
             } else if (activeTool === 'text_note') {
                 const text = window.prompt('Enter note text:');
                 if (text) {
-                    currentAnnotations = addAnnotation(currentAnnotations, 'text_note', { timestamp, price, text });
+                    if (!Array.isArray(currentAnnotations)) currentAnnotations = [];
+                    saveToHistory();
+                    currentAnnotations = addAnnotation(currentAnnotations, 'text_note', {
+                        timestamp: coords.timestamp,
+                        price: coords.price,
+                        text
+                    });
+                    saveAnnotations(currentSymbol, currentAnnotations);
+                    updateAnnotationsOnChart();
+                }
+                pointerDown = false;
+            }
+        }
+
+        function handlePointerMove(e) {
+            if (!pointerDown) return;
+            e.preventDefault();
+            const coords = getCanvasCoords(canvas, e);
+            if (!coords) return;
+
+            if (activeTool === 'select' && selectedAnnotation) {
+                selectedAnnotation.timestamp = coords.timestamp;
+                selectedAnnotation.price = coords.price;
+                updateAnnotationsOnChart();
+            } else if (isDrawing && drawingStart) {
+                drawLinePreview(drawingStart, coords);
+            }
+        }
+
+        function handlePointerUp(e) {
+            const coords = getCanvasCoords(canvas, e);
+
+            if (isDrawing && drawingStart && coords) {
+                finishDrawingLine(drawingStart, coords);
+            } else if (isDrawing && drawingStart) {
+                // Remove preview if pointer left canvas
+                if (chart && chart.options.plugins.annotation.annotations) {
+                    delete chart.options.plugins.annotation.annotations['preview_line'];
+                    chart.update('none');
+                }
+            }
+
+            if (activeTool === 'select' && selectedAnnotation && pointerDown) {
+                saveAnnotations(currentSymbol, currentAnnotations);
+            }
+
+            isDrawing = false;
+            drawingStart = null;
+            pointerDown = false;
+        }
+
+        // Mouse events
+        canvas.addEventListener('mousedown', handlePointerDown);
+        canvas.addEventListener('mousemove', handlePointerMove);
+        canvas.addEventListener('mouseup', handlePointerUp);
+        canvas.addEventListener('mouseleave', handlePointerUp);
+
+        // Touch events
+        canvas.addEventListener('touchstart', handlePointerDown, { passive: false });
+        canvas.addEventListener('touchmove', handlePointerMove, { passive: false });
+        canvas.addEventListener('touchend', handlePointerUp);
+        canvas.addEventListener('touchcancel', handlePointerUp);
+
+        // Prevent context menu on canvas
+        canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+
+        // Delete key
+        canvas.addEventListener('keydown', async (e) => {
+            if ((e.key === 'Delete' || e.key === 'Backspace') && currentAnnotations.length > 0) {
+                if (selectedAnnotation) {
+                    deleteSelectedAnnotation(selectedAnnotation);
+                } else {
+                    const last = currentAnnotations[currentAnnotations.length - 1];
+                    saveToHistory();
+                    currentAnnotations = deleteAnnotation(currentAnnotations, last.id);
                     await saveAnnotations(currentSymbol, currentAnnotations);
                     updateAnnotationsOnChart();
                 }
-            }
-        });
-
-        // Delete annotation on click when delete tool is active
-        canvas.addEventListener('click', async (e) => {
-            if (activeTool !== 'delete') return;
-            if (!chart || currentAnnotations.length === 0) return;
-            const rect = canvas.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-            const xScale = chart.scales.x;
-            const yScale = chart.scales.y;
-            if (!xScale || !yScale) return;
-            const clickX = xScale.getValueForPixel(x);
-            const clickY = yScale.getValueForPixel(y);
-
-            // Find closest annotation
-            let closest = null;
-            let minDist = Infinity;
-            currentAnnotations.forEach(ann => {
-                const annXIndex = currentStockData.findIndex(d => d.Date === ann.timestamp);
-                const dx = (annXIndex < 0 ? 0 : annXIndex) - clickX;
-                const dy = ann.price - clickY;
-                const dist = Math.sqrt(dx * dx + dy * dy);
-                if (dist < minDist) {
-                    minDist = dist;
-                    closest = ann;
-                }
-            });
-            // Threshold: 5% of x-range + 3% of y-range
-            const X_THRESHOLD_RATIO = 0.05;
-            const Y_THRESHOLD_RATIO = 0.03;
-            const threshold = (xScale.max - xScale.min) * X_THRESHOLD_RATIO + Math.abs(yScale.max - yScale.min) * Y_THRESHOLD_RATIO;
-            if (closest && minDist < threshold) {
-                currentAnnotations = deleteAnnotation(currentAnnotations, closest.id);
-                await saveAnnotations(currentSymbol, currentAnnotations);
-                updateAnnotationsOnChart();
-            }
-        });
-
-        // Delete key to remove last annotation or selected
-        canvas.addEventListener('keydown', async (e) => {
-            if ((e.key === 'Delete' || e.key === 'Backspace') && currentAnnotations.length > 0) {
-                const last = currentAnnotations[currentAnnotations.length - 1];
-                currentAnnotations = deleteAnnotation(currentAnnotations, last.id);
-                await saveAnnotations(currentSymbol, currentAnnotations);
-                updateAnnotationsOnChart();
             }
         });
         canvas.setAttribute('tabindex', '0');
@@ -213,16 +379,17 @@ document.addEventListener('DOMContentLoaded', async () => {
             const timestamp = currentStockData[xIndex] ? currentStockData[xIndex].Date : String(xIndex);
 
             if (toolType === 'horizontal_line') {
+                saveToHistory();
                 currentAnnotations = addAnnotation(currentAnnotations, 'horizontal_line', { timestamp, price });
                 await saveAnnotations(currentSymbol, currentAnnotations);
                 updateAnnotationsOnChart();
             } else if (toolType === 'trend_line') {
                 trendLineStart = { timestamp, price };
-                // Activate trend line tool so the user can click for the second point
                 activeTool = 'trend_line';
             } else if (toolType === 'text_note') {
                 const text = window.prompt('Enter note text:');
                 if (text) {
+                    saveToHistory();
                     currentAnnotations = addAnnotation(currentAnnotations, 'text_note', { timestamp, price, text });
                     await saveAnnotations(currentSymbol, currentAnnotations);
                     updateAnnotationsOnChart();
@@ -243,6 +410,91 @@ document.addEventListener('DOMContentLoaded', async () => {
             : {};
         chart.options.plugins.annotation.annotations = Object.assign({}, patternAnns, srAnns, annConfig);
         chart.update('none');
+    }
+
+    // ---- Annotation History (Undo/Redo) ----
+    function saveToHistory() {
+        if (!Array.isArray(currentAnnotations)) return;
+        if (historyIndex < annotationHistory.length - 1) {
+            annotationHistory = annotationHistory.slice(0, historyIndex + 1);
+        }
+        annotationHistory.push(JSON.stringify(currentAnnotations));
+        if (annotationHistory.length > MAX_HISTORY) {
+            annotationHistory.shift();
+        } else {
+            historyIndex++;
+        }
+        updateUndoRedoButtons();
+    }
+
+    function updateUndoRedoButtons() {
+        const undoBtn = document.getElementById('undo-btn');
+        const redoBtn = document.getElementById('redo-btn');
+        if (undoBtn) undoBtn.disabled = historyIndex <= 0;
+        if (redoBtn) redoBtn.disabled = historyIndex >= annotationHistory.length - 1;
+    }
+
+    function undo() {
+        if (historyIndex <= 0) return;
+        historyIndex--;
+        currentAnnotations = JSON.parse(annotationHistory[historyIndex]);
+        saveAnnotations(currentSymbol, currentAnnotations);
+        updateAnnotationsOnChart();
+        updateUndoRedoButtons();
+    }
+
+    function redo() {
+        if (historyIndex >= annotationHistory.length - 1) return;
+        historyIndex++;
+        currentAnnotations = JSON.parse(annotationHistory[historyIndex]);
+        saveAnnotations(currentSymbol, currentAnnotations);
+        updateAnnotationsOnChart();
+        updateUndoRedoButtons();
+    }
+
+    function clearAllAnnotations() {
+        if (!confirm('Clear all annotations?')) return;
+        saveToHistory();
+        currentAnnotations = [];
+        saveAnnotations(currentSymbol, currentAnnotations);
+        updateAnnotationsOnChart();
+    }
+
+    // ---- Line-Up Toggle ----
+    async function loadLineupPref() {
+        return new Promise((resolve) => {
+            chrome.storage.local.get(['lineupHidden'], (result) => {
+                resolve(result.lineupHidden === true);
+            });
+        });
+    }
+
+    async function saveLineupPref(hidden) {
+        return new Promise((resolve) => {
+            chrome.storage.local.set({ lineupHidden: hidden }, resolve);
+        });
+    }
+
+    function updateLineupToggleIcon(hidden) {
+        const icon = document.getElementById('lineup-toggle-icon');
+        if (icon) icon.textContent = hidden ? '☰' : '✕';
+    }
+
+    async function initLineupToggle() {
+        const lineupHidden = await loadLineupPref();
+        if (lineupHidden) {
+            resultsContainer.classList.add('lineup-hidden');
+        }
+        updateLineupToggleIcon(lineupHidden);
+
+        const toggle = document.getElementById('lineup-toggle');
+        if (toggle) {
+            toggle.addEventListener('click', async () => {
+                const isHidden = resultsContainer.classList.toggle('lineup-hidden');
+                updateLineupToggleIcon(isHidden);
+                await saveLineupPref(isHidden);
+            });
+        }
     }
 
     // ---- Support & Resistance Controls ----
@@ -961,6 +1213,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         setupAnnotationInteraction(document.getElementById('stockChart'));
         updateSROverlay();
         initLineUp();
+        await initLineupToggle();
+
+        // Undo/redo/clear button listeners (added after toolbar is created)
+        document.getElementById('undo-btn')?.addEventListener('click', undo);
+        document.getElementById('redo-btn')?.addEventListener('click', redo);
+        document.getElementById('clear-btn')?.addEventListener('click', clearAllAnnotations);
 
         // Hide loading
         loadingOverlay.classList.add('hidden');

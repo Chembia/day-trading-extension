@@ -217,6 +217,107 @@ function importAnnotations(json) {
     }
 }
 
+// Annotation interaction modes
+const ANNOTATION_MODE = {
+    DRAW: 'draw',
+    SELECT: 'select',
+    MOVE: 'move',
+    RESIZE: 'resize',
+    ROTATE: 'rotate'
+};
+
+/**
+ * Create an enhanced annotation object with transform properties.
+ * @param {string} type - 'horizontal_line' | 'trend_line' | 'text_note'
+ * @param {Object} coords - { timestamp, price, endTimestamp?, endPrice?, text? }
+ * @param {Object} style - { color?, lineWidth? }
+ * @returns {Object} annotation object
+ */
+function createAnnotation(type, coords, style = {}) {
+    return {
+        id: _generateAnnotationId(),
+        type,
+        timestamp: coords.timestamp,
+        price: coords.price,
+        endTimestamp: coords.endTimestamp || null,
+        endPrice: coords.endPrice || null,
+        text: coords.text || '',
+        color: style.color || '#FF6B6B',
+        lineWidth: style.lineWidth || 2,
+        rotation: 0,
+        scaleX: 1,
+        scaleY: 1,
+        createdAt: new Date().toISOString(),
+        selected: false
+    };
+}
+
+/**
+ * Calculate if a point is near a line segment.
+ * @param {number} px - point x
+ * @param {number} py - point y
+ * @param {number} x1 - segment start x
+ * @param {number} y1 - segment start y
+ * @param {number} x2 - segment end x
+ * @param {number} y2 - segment end y
+ * @param {number} threshold - pixel threshold
+ * @returns {boolean}
+ */
+function isPointNearLineSegment(px, py, x1, y1, x2, y2, threshold) {
+    const dx = x2 - x1;
+    const dy = y2 - y1;
+    const lengthSquared = dx * dx + dy * dy;
+
+    if (lengthSquared === 0) {
+        const dist = Math.sqrt((px - x1) ** 2 + (py - y1) ** 2);
+        return dist < threshold;
+    }
+
+    let t = ((px - x1) * dx + (py - y1) * dy) / lengthSquared;
+    t = Math.max(0, Math.min(1, t));
+
+    const projX = x1 + t * dx;
+    const projY = y1 + t * dy;
+
+    const dist = Math.sqrt((px - projX) ** 2 + (py - projY) ** 2);
+    return dist < threshold;
+}
+
+/**
+ * Hit detection for clicking on annotations (pixel-space).
+ * Requires ann.xPixel / ann.yPixel to be pre-computed.
+ * @param {Object} annotation
+ * @param {number} clickX - pixel x
+ * @param {number} clickY - pixel y
+ * @param {number} threshold - pixel threshold
+ * @returns {boolean}
+ */
+function isPointNearAnnotation(annotation, clickX, clickY, threshold = 10) {
+    const annX = annotation.xPixel || 0;
+    const annY = annotation.yPixel || 0;
+
+    if (annotation.type === 'horizontal_line') {
+        return Math.abs(clickY - annY) < threshold;
+    } else if (annotation.type === 'trend_line') {
+        return isPointNearLineSegment(
+            clickX, clickY,
+            annX, annY,
+            annotation.endXPixel || annX,
+            annotation.endYPixel || annY,
+            threshold
+        );
+    } else if (annotation.type === 'text_note') {
+        const bounds = annotation.bounds || { width: 100, height: 30 };
+        return (
+            clickX >= annX - bounds.width / 2 &&
+            clickX <= annX + bounds.width / 2 &&
+            clickY >= annY - bounds.height / 2 &&
+            clickY <= annY + bounds.height / 2
+        );
+    }
+    return false;
+}
+
 // Browser global
 if (typeof window !== 'undefined') {
     window.loadAnnotations = loadAnnotations;
@@ -227,6 +328,10 @@ if (typeof window !== 'undefined') {
     window.renderAnnotations = renderAnnotations;
     window.exportAnnotations = exportAnnotations;
     window.importAnnotations = importAnnotations;
+    window.ANNOTATION_MODE = ANNOTATION_MODE;
+    window.createAnnotation = createAnnotation;
+    window.isPointNearAnnotation = isPointNearAnnotation;
+    window.isPointNearLineSegment = isPointNearLineSegment;
 }
 
 // Node.js
@@ -239,6 +344,10 @@ if (typeof module !== 'undefined' && module.exports) {
         moveAnnotation,
         renderAnnotations,
         exportAnnotations,
-        importAnnotations
+        importAnnotations,
+        ANNOTATION_MODE,
+        createAnnotation,
+        isPointNearAnnotation,
+        isPointNearLineSegment
     };
 }

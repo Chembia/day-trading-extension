@@ -1206,3 +1206,120 @@ body {
     transform: translateY(0);
     opacity: 1;
 }
+
+/* Line-Up Toggle Button */
+.lineup-toggle {
+    position: fixed;
+    top: 100px;
+    right: 20px;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 1001;
+    border: 1.5px solid rgba(182, 182, 182, 0.3);
+    padding: 0;
+    transition: all 0.3s ease;
+    font-size: 18px;
+}
+
+.lineup-toggle:hover {
+    background: rgba(208, 250, 249, 0.3) !important;
+    border-color: rgba(208, 250, 249, 0.5) !important;
+    transform: none;
+}
+
+/* Line-up hidden state */
+.lineup-hidden #lineup-container {
+    transform: translateX(calc(100% + 40px));
+    opacity: 0;
+    pointer-events: none;
+}
+
+#lineup-container {
+    transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+/* Delete confirmation popup */
+.delete-confirmation {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    padding: 24px;
+    z-index: 10000;
+    text-align: center;
+    min-width: 300px;
+}
+
+.delete-confirmation p {
+    margin: 0 0 16px 0;
+    font-size: 16px;
+}
+
+.delete-confirmation button {
+    margin: 0 8px;
+    padding: 8px 20px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.btn-danger {
+    background: rgba(244, 67, 54, 0.9);
+    color: white;
+}
+
+.btn-secondary-action {
+    background: rgba(158, 158, 158, 0.9);
+    color: white;
+}
+
+/* Toolbar divider */
+.toolbar-divider {
+    width: 1px;
+    height: 28px;
+    background: rgba(182, 182, 182, 0.4);
+    margin: 0 4px;
+    align-self: center;
+}
+
+/* Annotation action buttons (undo/redo/clear) */
+.annotation-action {
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(182, 182, 182, 0.3);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 16px;
+    padding: 0;
+    line-height: 1;
+    color: var(--text-primary);
+}
+
+.annotation-action:hover:not(:disabled) {
+    background: rgba(208, 250, 249, 0.4);
+    border-color: rgba(208, 250, 249, 0.6);
+}
+
+.annotation-action:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+[data-theme="dark"] .annotation-action {
+    background: rgba(44, 44, 44, 0.6);
+}
+
+[data-theme="dark"] .annotation-action:hover:not(:disabled) {
+    background: rgba(208, 250, 249, 0.2);
+}
