@@ -8,6 +8,12 @@ const ANNOTATION_TOOLS = [
     { id: 'delete', label: '🗑', title: 'Delete – Remove an annotation' }
 ];
 
+const ANNOTATION_ACTIONS = [
+    { id: 'undo-btn', label: '↶', title: 'Undo – Revert the last annotation change' },
+    { id: 'redo-btn', label: '↷', title: 'Redo – Reapply the last undone change' },
+    { id: 'clear-btn', label: '✕', title: 'Clear All – Remove all annotations' }
+];
+
 /**
  * Create and inject the annotation toolbar into the DOM.
  * @param {string} containerId - id of container element to append toolbar to
@@ -45,6 +51,25 @@ function createAnnotationToolbar(containerId, onToolSelect) {
             btn.classList.add('active');
             if (typeof onToolSelect === 'function') onToolSelect(tool.id);
         });
+        toolbar.appendChild(btn);
+    });
+
+    // Divider
+    const divider = document.createElement('div');
+    divider.className = 'toolbar-divider';
+    toolbar.appendChild(divider);
+
+    // Action buttons (undo, redo, clear)
+    ANNOTATION_ACTIONS.forEach(action => {
+        const btn = document.createElement('button');
+        btn.className = 'annotation-action';
+        btn.id = action.id;
+        btn.title = action.title;
+        btn.setAttribute('aria-label', action.title);
+        btn.textContent = action.label;
+        if (action.id === 'undo-btn' || action.id === 'redo-btn') {
+            btn.disabled = true;
+        }
         toolbar.appendChild(btn);
     });
 
