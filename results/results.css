@@ -3,6 +3,11 @@
 body {
     min-height: 100vh;
     padding: 20px 300px 20px 20px;
+    transition: padding-right 0.3s ease;
+}
+
+body.lineup-hidden {
+    padding-right: 20px;
 }
 
 .results-container {
@@ -1017,13 +1022,15 @@ body {
 .annotation-toolbar-container {
     position: relative;
     height: 0;
+    overflow: visible;
+    pointer-events: none;
 }
 
 .annotation-toolbar {
     position: absolute;
     top: 8px;
     right: 8px;
-    z-index: 10;
+    z-index: 100;
     display: flex;
     gap: 4px;
     background: rgba(255, 255, 255, 0.85);
@@ -1032,6 +1039,7 @@ body {
     border-radius: 8px;
     padding: 4px 6px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+    pointer-events: auto;
 }
 
 [data-theme="dark"] .annotation-toolbar {
