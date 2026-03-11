@@ -1,6 +1,10 @@
 // Results Page JavaScript
 
 const MAX_SAVED_PATTERNS = 5;
+const DEFAULT_ZOOM_BUFFER = 5;
+const MAX_PATTERN_DISPLAY = 999;
+const MIN_PANEL_WIDTH = 200;
+const MAX_PANEL_WIDTH = 500;
 
 document.addEventListener('DOMContentLoaded', async () => {
     // DOM Elements
@@ -831,7 +835,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             item.addEventListener('click', (e) => {
                 if (e.target.classList.contains('read-more-toggle')) return;
                 activeZoomPatternIndex = pattern.index;
-                zoomChartToPattern(chart, currentStockData, pattern.index, 5);
+                zoomChartToPattern(chart, currentStockData, pattern.index, DEFAULT_ZOOM_BUFFER);
                 document.getElementById('stockChart').scrollIntoView({ behavior: 'smooth', block: 'center' });
                 document.querySelectorAll('.pattern-item').forEach(el => el.classList.remove('selected'));
                 item.classList.add('selected');
@@ -904,7 +908,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const showAllBtn = document.getElementById('show-all-btn');
     if (showAllBtn) {
         showAllBtn.addEventListener('click', () => {
-            if (topNInput) topNInput.value = allPatterns.length || 999;
+            if (topNInput) topNInput.value = allPatterns.length || MAX_PATTERN_DISPLAY;
             applyFilters();
         });
     }
@@ -1165,7 +1169,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.addEventListener('mousemove', (e) => {
             if (!isResizing) return;
             const delta = side === 'right' ? e.clientX - startX : startX - e.clientX;
-            const newWidth = Math.max(200, Math.min(500, startWidth + delta));
+            const newWidth = Math.max(MIN_PANEL_WIDTH, Math.min(MAX_PANEL_WIDTH, startWidth + delta));
             panelEl.style.width = newWidth + 'px';
             panelEl.style.minWidth = newWidth + 'px';
             if (chart) chart.resize();
