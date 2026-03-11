@@ -89,6 +89,10 @@
                         <div class="chart-section-header">
                             <h2>Candlestick Chart with Pattern Annotations</h2>
                             <div class="chart-actions">
+                                <span class="chart-hint">Shift+drag: zoom • Ctrl+drag: pan • Scroll: zoom</span>
+                                <button id="reset-zoom-btn" class="glass-button glass-button-secondary chart-action-btn" title="Reset Zoom">
+                                    🔍 Reset
+                                </button>
                                 <button id="downloadBtn" class="glass-button glass-button-secondary chart-action-btn">
                                     ⬇️ Download
                                 </button>
@@ -344,6 +348,7 @@
     <script src="../scripts/chart-annotations.js"></script>
     <script src="../scripts/annotation-toolbar.js"></script>
     <script src="../scripts/chart-generator.js"></script>
+    <script src="../scripts/range-zoom.js"></script>
     <script src="../scripts/theme-manager.js"></script>
     <script src="results.js"></script>
 </body>

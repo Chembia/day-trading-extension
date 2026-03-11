@@ -724,9 +724,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                 chart.options.plugins.annotation.annotations = Object.assign({}, srAnns, userAnns);
                 chart.update('none');
             } else if (currentStockData.length > 0) {
+                const canvas = document.getElementById('stockChart');
                 chart = createCandlestickChart('stockChart', currentStockData, [], srLevels);
                 chart._lastFilteredPatterns = [];
-                setupAnnotationInteraction(document.getElementById('stockChart'));
+                setupAnnotationInteraction(canvas);
+                if (typeof enableChartInteraction === 'function') enableChartInteraction(chart, canvas);
             }
             return;
         }
@@ -756,9 +758,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             displaySidebarPatterns(filtered);
 
             if (!chart) {
+                const canvas = document.getElementById('stockChart');
                 chart = createCandlestickChart('stockChart', currentStockData, filtered, srLevels);
                 chart._lastFilteredPatterns = filtered;
-                setupAnnotationInteraction(document.getElementById('stockChart'));
+                setupAnnotationInteraction(canvas);
+                if (typeof enableChartInteraction === 'function') enableChartInteraction(chart, canvas);
             } else {
                 chart._lastFilteredPatterns = filtered;
                 const patternAnns = createPatternAnnotations(filtered, currentStockData);
@@ -773,22 +777,38 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Pattern educational content
     function getPatternDescription(patternName) {
         const name = patternName.toLowerCase();
-        if (name.includes('hammer')) return 'A hammer forms when price falls sharply but recovers near the open. The long lower shadow signals buyers stepped in — potential bullish reversal.';
         if (name.includes('bullish engulfing')) return 'A large bullish candle completely engulfs the prior bearish candle. Strong signal that buyers have taken control — potential upside move.';
         if (name.includes('bearish engulfing')) return 'A large bearish candle completely engulfs the prior bullish candle. Sellers have overpowered buyers — potential downside move.';
-        if (name.includes('hanging man')) return 'Looks like a hammer but appears in an uptrend. Signals that selling pressure is building despite the recovery — watch for reversal.';
-        if (name.includes('doji')) return 'Open and close are nearly equal, forming a cross. Indecision between buyers and sellers — often signals a trend pause or reversal.';
+        if (name.includes('bullish harami')) return 'A small bullish candle contained within the prior large bearish candle. Signals possible momentum loss in the downtrend — watch for reversal.';
+        if (name.includes('bearish harami')) return 'A small bearish candle contained within the prior large bullish candle. Signals possible momentum loss in the uptrend — watch for reversal.';
+        if (name.includes('harami cross')) return 'A doji candle inside the previous candle\'s range. Strong indecision signal — possible trend pause or reversal.';
+        if (name.includes('bullish counterattack')) return 'Two candles with matching closes: bearish then bullish. Buyers aggressively reclaimed lost ground — potential bullish reversal.';
+        if (name.includes('bearish counterattack')) return 'Two candles with matching closes: bullish then bearish. Sellers aggressively reclaimed gains — potential bearish reversal.';
         if (name.includes('three white soldiers')) return 'Three consecutive bullish candles with progressively higher closes. Strong confirmation of an uptrend.';
         if (name.includes('three black crows')) return 'Three consecutive bearish candles with progressively lower closes. Strong confirmation of a downtrend.';
         if (name.includes('abandoned baby')) return 'A rare three-candle pattern with a doji gap. Signals a sharp reversal and is considered highly reliable.';
         if (name.includes('tweezer top')) return 'Two candles with matching highs at resistance. Sellers defended the level — potential downside reversal.';
         if (name.includes('tweezer bottom')) return 'Two candles with matching lows at support. Buyers defended the level — potential upside reversal.';
+        if (name.includes('morning star')) return 'A three-candle bullish reversal: large bearish, small body, large bullish. Strong signal that selling pressure has exhausted.';
+        if (name.includes('evening star')) return 'A three-candle bearish reversal: large bullish, small body, large bearish. Strong signal that buying pressure has exhausted.';
+        if (name.includes('three inside up')) return 'A bullish reversal: harami followed by a strong close above the first candle. Confirms buyers stepping in.';
+        if (name.includes('three inside down')) return 'A bearish reversal: harami followed by a strong close below the first candle. Confirms sellers stepping in.';
+        if (name.includes('three outside up')) return 'A bullish reversal: engulfing pattern confirmed by a third bullish candle. High-conviction buy signal.';
+        if (name.includes('three outside down')) return 'A bearish reversal: engulfing pattern confirmed by a third bearish candle. High-conviction sell signal.';
+        if (name.includes('tri star bullish')) return 'Three consecutive dojis with the middle doji gapping down. Extreme indecision — potential bullish reversal.';
+        if (name.includes('tri star bearish')) return 'Three consecutive dojis with the middle doji gapping up. Extreme indecision — potential bearish reversal.';
+        if (name.includes('upside gap two crows')) return 'After a bullish candle, two bearish candles fill the gap. The trend may be reversing.';
+        if (name.includes('deliberation')) return 'Three ascending bullish candles with a small third body. The uptrend may be losing steam.';
+        if (name.includes('three line strike bearish')) return 'Three bearish candles followed by a large bullish candle. Counter-trend pullback — bearish trend likely continues.';
+        if (name.includes('three line strike bullish')) return 'Three bullish candles followed by a large bearish candle. Counter-trend pullback — bullish trend likely continues.';
+        if (name.includes('tasuki gap up')) return 'Gap-up continuation: bullish gap followed by a bearish candle that doesn\'t close the gap. Bullish trend likely continues.';
+        if (name.includes('separating lines bullish')) return 'A bearish candle followed by a bullish candle opening at the same price. Bullish continuation signal.';
+        if (name.includes('separating lines bearish')) return 'A bullish candle followed by a bearish candle opening at the same price. Bearish continuation signal.';
+        if (name.includes('matching high')) return 'Two candles closing at nearly the same high. Strong resistance level — potential reversal.';
         if (name.includes('rising three')) return 'A bullish continuation pattern: large bullish candle, three small retracements, then a new high. Trend likely continues up.';
         if (name.includes('falling three')) return 'A bearish continuation pattern: large bearish candle, three small rallies, then a new low. Trend likely continues down.';
         if (name.includes('liquiditysweephigh')) return 'Price swept above a prior high but closed back below it. Indicates a "stop hunt" — shorts may now be trapped, potential reversal.';
         if (name.includes('liquiditysweeplow')) return 'Price swept below a prior low but closed back above it. Indicates buyers absorbed the selling — potential upside move.';
-        if (name.includes('volatilityexpansion')) return 'Price range is significantly wider than average. Signals a surge in momentum — follow-through in the breakout direction is likely.';
-        if (name.includes('extremebody')) return 'An unusually large candle body relative to recent price action. Strong directional momentum in the candle\'s direction.';
         return 'A confirmed candlestick pattern detected by the Fluey algorithm. Monitor for follow-through confirmation.';
     }
 
@@ -910,6 +930,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         showAllBtn.addEventListener('click', () => {
             if (topNInput) topNInput.value = allPatterns.length || MAX_PATTERN_DISPLAY;
             applyFilters();
+        });
+    }
+
+    const resetZoomBtn = document.getElementById('reset-zoom-btn');
+    if (resetZoomBtn) {
+        resetZoomBtn.addEventListener('click', () => {
+            if (chart && currentStockData) {
+                resetChartZoom(chart, currentStockData);
+                updateSROverlay();
+            }
         });
     }
 
@@ -1168,11 +1198,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         document.addEventListener('mousemove', (e) => {
             if (!isResizing) return;
-            const delta = side === 'right' ? e.clientX - startX : startX - e.clientX;
-            const newWidth = Math.max(MIN_PANEL_WIDTH, Math.min(MAX_PANEL_WIDTH, startWidth + delta));
-            panelEl.style.width = newWidth + 'px';
-            panelEl.style.minWidth = newWidth + 'px';
-            if (chart) chart.resize();
+            requestAnimationFrame(() => {
+                const delta = side === 'right' ? e.clientX - startX : startX - e.clientX;
+                const newWidth = Math.max(MIN_PANEL_WIDTH, Math.min(MAX_PANEL_WIDTH, startWidth + delta));
+                panelEl.style.width = newWidth + 'px';
+                panelEl.style.minWidth = newWidth + 'px';
+                if (chart) chart.resize();
+            });
         });
 
         document.addEventListener('mouseup', () => {
@@ -1214,7 +1246,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         currentSymbol = symbol;
         currentAnnotations = await loadAnnotations(symbol);
         initAnnotationToolbar();
-        setupAnnotationInteraction(document.getElementById('stockChart'));
+        const chartCanvas = document.getElementById('stockChart');
+        setupAnnotationInteraction(chartCanvas);
+        if (typeof enableChartInteraction === 'function' && chart) {
+            enableChartInteraction(chart, chartCanvas);
+        }
         updateSROverlay();
         initLineUp();
         initLineupPopup();

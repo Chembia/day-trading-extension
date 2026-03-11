@@ -169,7 +169,7 @@ function createPatternAnnotations(patterns, stockData) {
             borderWidth: 2,
             label: {
                 display: true,
-                content: `${pattern.patternName} (${pattern.confidence}%)`,
+                content: pattern.patternName,
                 position: 'start',
                 backgroundColor: borderColor,
                 color: labelColor,
