@@ -203,19 +203,14 @@
     <!-- Help Button -->
     <button id="help-toggle" class="help-button" title="Help">❓</button>
 
-    <!-- Line-Up Toggle Button -->
-    <button id="lineup-popup-toggle" class="lineup-popup-toggle" title="Line-Up Charts">
-        <span class="lineup-label">Chart Line-Up</span>
-    </button>
+    <!-- Line-Up Toggle Button (bottom-left, styled like help button) -->
+    <button id="lineup-popup-toggle" class="lineup-button" title="Chart Line-Up">Chart Line-Up</button>
 
     <!-- Line-Up Popup -->
     <div id="lineup-popup" class="lineup-popup glass-container">
         <div id="lineup-header" class="lineup-popup-header">
             <h3>Line-Up</h3>
             <div class="lineup-header-actions">
-                <button id="open-gallery" class="glass-button glass-button-secondary" title="Open Gallery View" style="font-size: 12px; padding: 4px 8px;">
-                    📊 Gallery
-                </button>
                 <button id="lineup-popup-close" class="glass-button glass-button-secondary" title="Close" style="font-size: 12px; padding: 4px 8px;">
                     ✕
                 </button>
@@ -295,6 +290,13 @@
                         <button class="theme-option active" data-theme="light">☀️ Light</button>
                         <button class="theme-option" data-theme="dark">🌙 Dark</button>
                     </div>
+                </div>
+                <div class="setting-item">
+                    <label class="setting-label" for="show-ohlc-tooltip">Show Price Details on Hover</label>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="show-ohlc-tooltip" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
                 </div>
             </div>
             <div class="modal-footer">

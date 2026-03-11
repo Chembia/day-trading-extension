@@ -141,32 +141,29 @@ function createPatternAnnotations(patterns, stockData) {
         minPrice -= padding;
         maxPrice += padding;
         
-        // Determine box color based on pattern type
-        let boxColor, borderColor;
+        // Determine border color based on pattern type (outline-only, no fill)
+        let borderColor;
         switch (pattern.type) {
             case 'bullish':
-                boxColor = 'rgba(34, 197, 94, 0.2)';
-                borderColor = 'rgba(34, 197, 94, 0.6)';
+                borderColor = 'rgba(34, 197, 94, 0.85)';
                 break;
             case 'bearish':
-                boxColor = 'rgba(239, 68, 68, 0.2)';
-                borderColor = 'rgba(239, 68, 68, 0.6)';
+                borderColor = 'rgba(239, 68, 68, 0.85)';
                 break;
             default:
-                boxColor = 'rgba(251, 191, 36, 0.2)';
-                borderColor = 'rgba(251, 191, 36, 0.6)';
+                borderColor = 'rgba(251, 191, 36, 0.85)';
         }
         
-        // Create box annotation
+        // Create box annotation (outline only, no background fill)
         annotations[`box_${idx}`] = {
             type: 'box',
             xMin: startIdx - 0.5,
             xMax: endIdx + 0.5,
             yMin: minPrice,
             yMax: maxPrice,
-            backgroundColor: boxColor,
+            backgroundColor: 'transparent',
             borderColor: borderColor,
-            borderWidth: 2,
+            borderWidth: 3,
             label: {
                 display: true,
                 content: pattern.patternName,
@@ -249,19 +246,22 @@ function highlightAnnotation(chart, annotationKey, highlight) {
         if (!_annotationOriginals.has(annotationKey)) {
             _annotationOriginals.set(annotationKey, {
                 borderWidth: ann.borderWidth,
+                borderColor: ann.borderColor,
                 backgroundColor: ann.backgroundColor
             });
         }
-        ann.borderWidth = 4;
-        // Increase alpha slightly for highlight effect
-        ann.backgroundColor = ann.backgroundColor.replace(
+        ann.borderWidth = 5;
+        // Increase border opacity for highlight effect (outline-only annotations)
+        ann.borderColor = ann.borderColor.replace(
             /rgba\(([^,]+),([^,]+),([^,]+),[^)]+\)/,
-            'rgba($1,$2,$3,0.45)'
+            'rgba($1,$2,$3,1)'
         );
+        ann.backgroundColor = 'rgba(255, 255, 255, 0.08)';
     } else {
         const orig = _annotationOriginals.get(annotationKey);
         if (orig) {
             ann.borderWidth = orig.borderWidth;
+            ann.borderColor = orig.borderColor;
             ann.backgroundColor = orig.backgroundColor;
         }
     }

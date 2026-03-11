@@ -1095,11 +1095,17 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const showOhlcToggle = document.getElementById('show-ohlc-tooltip');
     if (showOhlcToggle) {
+        // Load saved OHLC preference
+        chrome.storage.local.get(['ohlcTooltipEnabled'], (result) => {
+            const enabled = result.ohlcTooltipEnabled !== false; // default true
+            showOhlcToggle.checked = enabled;
+        });
         showOhlcToggle.addEventListener('change', () => {
             if (chart) {
                 chart.options.plugins.tooltip.enabled = showOhlcToggle.checked;
                 chart.update('none');
             }
+            chrome.storage.local.set({ ohlcTooltipEnabled: showOhlcToggle.checked });
         });
     }
 
@@ -1263,13 +1269,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const addBtn = document.getElementById('add-to-lineup');
         if (addBtn) addBtn.addEventListener('click', captureChartSnapshot);
-
-        const openGallery = document.getElementById('open-gallery');
-        if (openGallery) {
-            openGallery.addEventListener('click', () => {
-                chrome.tabs.create({ url: chrome.runtime.getURL('lineup-gallery.html') });
-            });
-        }
 
         const lineupSnapshots = document.getElementById('lineup-snapshots');
         if (lineupSnapshots) {

@@ -10,7 +10,7 @@ A production-ready Chrome extension that identifies candlestick patterns in stoc
 - 🎯 **47 Pattern Recognition** - Complete FLUEY algorithm implementation
 - 📊 **Interactive Charts** - Candlestick charts with pattern annotations
 - 🎨 **Glassmorphism UI** - Beautiful golden-brown liquid glass design
-- 🔍 **Smart Filtering** - Confidence-based pattern filtering (>70%)
+- 🔍 **Smart Filtering** - Quality-based pattern filtering with progressive display
 - 💾 **Data Caching** - 1-hour cache for faster repeated queries
 - 📈 **Alpha Vantage Integration** - Real-time stock data
 
@@ -78,17 +78,16 @@ You're ready to analyze stock patterns!
 
 The results page displays:
 
-- **Candlestick Chart** - Visual representation with pattern boxes
-- **Pattern Table** - Detailed list of detected patterns
-- **Confidence Scores** - Pattern reliability (70-100%)
+- **Candlestick Chart** - Visual representation with pattern outline annotations
+- **Pattern List** - Detailed list of detected patterns
 - **Pattern Types** - Bullish (green), Bearish (red), Neutral (amber)
 - **Suggested Actions** - Buy, Sell, Hold, Monitor
 
 ### Pattern Boxes on Chart
 
-- **Green boxes** - Bullish patterns (potential uptrend)
-- **Red boxes** - Bearish patterns (potential downtrend)
-- **Amber boxes** - Neutral patterns
+- **Green outlines** - Bullish patterns (potential uptrend)
+- **Red outlines** - Bearish patterns (potential downtrend)
+- **Amber outlines** - Neutral patterns
 
 Hover over boxes to see pattern details.
 
@@ -210,18 +209,7 @@ The FLUEY algorithm uses:
 - **Parametric constants** for body/shadow ratios
 - **Feature engineering** for trend and volatility
 - **Pattern registration system** for extensibility
-- **Multi-candle analysis** (1-5 candles)
-- **Confidence scoring** for filtering
-
-### Confidence Scoring
-
-Patterns are scored 0-100% based on:
-- Pattern-specific quality metrics
-- Trend alignment bonuses (+20%)
-- Multi-candle pattern bonuses (+10%)
-- Large body bonuses (+5%)
-
-Only patterns >70% confidence are shown, limited to top 15.
+- **Multi-candle analysis** (2-5 candles)
 
 ### Technologies Used
 
@@ -249,7 +237,7 @@ day-trading-extension/
 │   ├── fluey-algorithm.js    # FLUEY pattern recognition
 │   ├── api-client.js         # Alpha Vantage API client
 │   ├── chart-generator.js    # Chart creation & annotations
-│   └── pattern-filter.js     # Confidence scoring & filtering
+│   └── pattern-filter.js     # Quality scoring & filtering
 ├── styles/
 │   └── common.css            # Shared glassmorphism styles
 └── assets/
@@ -319,7 +307,7 @@ MIT License - See LICENSE file for details
 - Initial release
 - 47 pattern recognition
 - Glassmorphism UI
-- Confidence scoring
+- Outline-only pattern annotations
 - Chart annotations
 - API caching
 
