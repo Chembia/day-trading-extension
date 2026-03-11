@@ -1112,7 +1112,7 @@ body {
     border-radius: 50px;
     padding: 12px 20px;
     font-size: 13px;
-    font-weight: 500;
+    font-weight: normal;
     color: var(--text-primary);
     cursor: pointer;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
