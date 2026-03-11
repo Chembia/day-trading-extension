@@ -132,6 +132,28 @@
                             <button id="show-all-btn" class="glass-button glass-button-secondary show-all-btn">All</button>
                         </div>
                     </div>
+
+                    <div class="panel-section">
+                        <h3>Show Pattern Clusters Of</h3>
+                        <div class="cluster-filter">
+                            <label class="cluster-checkbox-label">
+                                <input type="checkbox" value="2" class="cluster-checkbox" checked>
+                                <span>2 Candles</span>
+                            </label>
+                            <label class="cluster-checkbox-label">
+                                <input type="checkbox" value="3" class="cluster-checkbox" checked>
+                                <span>3 Candles</span>
+                            </label>
+                            <label class="cluster-checkbox-label">
+                                <input type="checkbox" value="4" class="cluster-checkbox" checked>
+                                <span>4 Candles</span>
+                            </label>
+                            <label class="cluster-checkbox-label">
+                                <input type="checkbox" value="5" class="cluster-checkbox" checked>
+                                <span>5+ Candles</span>
+                            </label>
+                        </div>
+                    </div>
                     
                     <div class="panel-section">
                         <h3>Support &amp; Resistance</h3>
@@ -152,13 +174,6 @@
                         </div>
                     </div>
                     
-                    <div class="panel-section">
-                        <h3>Display</h3>
-                        <label class="checkbox-label">
-                            <input type="checkbox" id="show-ohlc-tooltip" checked>
-                            Show OHLC on Hover
-                        </label>
-                    </div>
                 </aside>
             </div>
         </main>
@@ -190,7 +205,6 @@
 
     <!-- Line-Up Toggle Button -->
     <button id="lineup-popup-toggle" class="lineup-popup-toggle" title="Line-Up Charts">
-        <span class="lineup-icon">📊</span>
         <span class="lineup-label">Chart Line-Up</span>
     </button>
 

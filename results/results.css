@@ -4,6 +4,22 @@ body {
     min-height: 100vh;
     padding: 20px;
     transition: none;
+    background: linear-gradient(
+        135deg,
+        rgba(208, 250, 249, 0.4) 0%,
+        rgba(165, 214, 235, 0.3) 25%,
+        rgba(255, 255, 255, 0.2) 50%,
+        rgba(247, 205, 255, 0.25) 75%,
+        rgba(208, 250, 249, 0.4) 100%
+    );
+    background-size: 400% 400%;
+    animation: gradientShift 15s ease infinite;
+}
+
+@keyframes gradientShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
 }
 
 .results-container {
@@ -527,7 +543,16 @@ body {
 
 /* Dark Mode */
 [data-theme="dark"] body {
-    background: linear-gradient(135deg, #1a1a1a, #121212);
+    background: linear-gradient(
+        135deg,
+        rgba(20, 30, 48, 1) 0%,
+        rgba(36, 59, 85, 1) 25%,
+        rgba(30, 20, 45, 1) 50%,
+        rgba(28, 37, 65, 1) 75%,
+        rgba(20, 30, 48, 1) 100%
+    );
+    background-size: 400% 400%;
+    animation: gradientShift 15s ease infinite;
     color: var(--text-primary);
 }
 
@@ -599,6 +624,12 @@ body {
 
 [data-theme="dark"] .modal-content {
     background: rgba(30, 30, 30, 0.95);
+}
+
+[data-theme="dark"] .lineup-popup-toggle {
+    background: linear-gradient(135deg, rgba(44, 44, 44, 0.95), rgba(30, 30, 30, 0.9));
+    border-color: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
 }
 
 /* Responsive Design */
@@ -920,6 +951,57 @@ body {
     font-size: 12px !important;
 }
 
+/* Cluster Filter */
+.cluster-filter {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.cluster-checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    background: rgba(208, 250, 249, 0.1);
+    border: 1.5px solid rgba(182, 182, 182, 0.2);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    user-select: none;
+}
+
+.cluster-checkbox-label:hover {
+    background: rgba(208, 250, 249, 0.3);
+    border-color: rgba(208, 250, 249, 0.5);
+    transform: translateX(2px);
+}
+
+.cluster-checkbox-label input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    accent-color: rgb(208, 250, 249);
+    flex-shrink: 0;
+}
+
+.cluster-checkbox-label span {
+    font-size: 13px;
+    font-weight: 500;
+    color: inherit;
+}
+
+[data-theme="dark"] .cluster-checkbox-label {
+    background: rgba(60, 60, 60, 0.3);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .cluster-checkbox-label:hover {
+    background: rgba(208, 250, 249, 0.15);
+    border-color: rgba(208, 250, 249, 0.3);
+}
+
 /* Animations */
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(10px); }
@@ -962,40 +1044,29 @@ body {
 /* Line-Up Popup */
 .lineup-popup-toggle {
     position: fixed;
-    bottom: 24px;
-    left: 24px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-    padding: 10px 14px;
-    min-width: 90px;
-    border-radius: 14px;
-    background: rgba(208, 250, 249, 0.9);
-    border: 2px solid rgba(208, 250, 249, 1);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+    bottom: 20px;
+    left: 20px;
+    z-index: 1000;
+    background: linear-gradient(135deg, rgba(208, 250, 249, 0.7), rgba(182, 182, 182, 0.4));
+    border: 1px solid rgba(208, 250, 249, 0.4);
+    border-radius: 50px;
+    padding: 14px 20px;
+    font-size: 14px;
+    font-weight: normal;
+    color: var(--text-primary);
     cursor: pointer;
-    z-index: 9999;
-    transition: all 0.3s ease;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(8px);
+    white-space: nowrap;
 }
 
 .lineup-popup-toggle:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
-}
-
-.lineup-icon {
-    font-size: 20px;
-    line-height: 1;
-}
-
-.lineup-label {
-    font-size: 10px;
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: 0.6px;
-    color: var(--text-primary);
-    white-space: nowrap;
+    transform: scale(1.05);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
 }
 
 .lineup-popup {
