@@ -766,25 +766,26 @@ document.addEventListener('DOMContentLoaded', async () => {
             noPatterns.classList.add('hidden');
             displaySidebarPatterns(filtered);
 
-            // Apply smart annotation filtering for chart display
-            const chartPatterns = (typeof calculateVisibleAnnotations === 'function' && chart)
-                ? calculateVisibleAnnotations(chart, filtered, currentStockData)
-                : filtered;
-
             if (!chart) {
                 const canvas = document.getElementById('stockChart');
-                chart = createCandlestickChart('stockChart', currentStockData, filtered, srLevels);
+                // Create chart without pattern annotations initially, then apply smart filtering
+                chart = createCandlestickChart('stockChart', currentStockData, [], srLevels);
                 chart._lastFilteredPatterns = filtered;
                 setupAnnotationInteraction(canvas);
                 if (typeof enableChartInteraction === 'function') enableChartInteraction(chart, canvas);
-            } else {
-                chart._lastFilteredPatterns = filtered;
-                const patternAnns = createPatternAnnotations(chartPatterns, currentStockData);
-                const srAnns = srVisible && srLevels.length > 0 ? createSRAnnotations(srLevels) : {};
-                const userAnns = renderAnnotations(chart, currentAnnotations, currentStockData);
-                chart.options.plugins.annotation.annotations = Object.assign({}, patternAnns, srAnns, userAnns);
-                chart.update('none');
             }
+
+            // Apply smart annotation filtering for chart display
+            const chartPatterns = (typeof calculateVisibleAnnotations === 'function')
+                ? calculateVisibleAnnotations(chart, filtered, currentStockData)
+                : filtered;
+
+            chart._lastFilteredPatterns = filtered;
+            const patternAnns = createPatternAnnotations(chartPatterns, currentStockData);
+            const srAnns = srVisible && srLevels.length > 0 ? createSRAnnotations(srLevels) : {};
+            const userAnns = renderAnnotations(chart, currentAnnotations, currentStockData);
+            chart.options.plugins.annotation.annotations = Object.assign({}, patternAnns, srAnns, userAnns);
+            chart.update('none');
         }
     }
 
@@ -1010,10 +1011,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         overlay.className = 'popup-overlay';
         document.body.appendChild(overlay);
 
-        requestAnimationFrame(() => {
+        // Allow one frame (~16ms) after DOM insertion so CSS transitions trigger correctly
+        setTimeout(() => {
             popup.classList.add('active');
             overlay.classList.add('active');
-        });
+        }, 16);
 
         const closePopup = () => {
             popup.classList.remove('active');

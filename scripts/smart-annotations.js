@@ -65,16 +65,22 @@ function calculateVisibleAnnotations(chart, allPatterns, stockData) {
         visibleNormalized = normalized;
     }
 
-    // Return the original (non-normalized) patterns that were selected
-    const selectedIndices = new Set(visibleNormalized.map((_, i) => {
-        // Find original pattern that matches this normalized one
-        const orig = allPatterns.findIndex((p, j) =>
-            (p === visibleNormalized[i]) ||
-            (p.patternName === visibleNormalized[i].patternName &&
-             (p.index || 0) === (visibleNormalized[i].endIndex || 0))
-        );
-        return orig;
-    }));
+    // Return the original (non-normalized) patterns that were selected.
+    // Build a lookup Map for O(n) matching: key = patternName + endIndex
+    const normalizedByKey = new Map();
+    for (const norm of visibleNormalized) {
+        const key = `${norm.patternName}|${norm.endIndex}`;
+        normalizedByKey.set(key, true);
+    }
+
+    const selectedIndices = new Set();
+    allPatterns.forEach((p, i) => {
+        const endIdx = p.index !== undefined ? p.index : (p.endIndex !== undefined ? p.endIndex : 0);
+        const key = `${p.patternName}|${endIdx}`;
+        if (normalizedByKey.has(key)) {
+            selectedIndices.add(i);
+        }
+    });
 
     return allPatterns.filter((_, i) => selectedIndices.has(i));
 }

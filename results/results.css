@@ -121,7 +121,7 @@ body {
     flex-direction: column;
     position: sticky;
     top: 20px;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), padding 0.4s cubic-bezier(0.4, 0, 0.2, 1), min-width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Sidebar hidden state */
@@ -146,7 +146,6 @@ body {
     display: flex;
     flex-direction: column;
     gap: 20px;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .sidebar-header {
@@ -608,6 +607,7 @@ body {
 @media (max-width: 900px) {
     .results-layout {
         flex-direction: column;
+        align-items: stretch;
     }
 
     .sidebar,
@@ -821,7 +821,7 @@ body {
     gap: 0;
     position: sticky;
     top: 20px;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .panel-section {
