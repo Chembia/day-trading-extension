@@ -1,22 +1,22 @@
 // Results Page JavaScript
 
 const MAX_SAVED_PATTERNS = 5;
-const LINEUP_TRANSITION_MS = 300;
+const DEFAULT_ZOOM_BUFFER = 5;
+const MAX_PATTERN_DISPLAY = 999;
+const MIN_PANEL_WIDTH = 200;
+const MAX_PANEL_WIDTH = 500;
 
 document.addEventListener('DOMContentLoaded', async () => {
     // DOM Elements
     const stockTitle = document.getElementById('stockTitle');
     const dateRange = document.getElementById('dateRange');
-    const patternCount = document.getElementById('patternCount');
     const patternCountSidebar = document.getElementById('pattern-count');
-    const patternsTable = document.getElementById('patternsTable');
     const noPatterns = document.getElementById('noPatterns');
     const loadingOverlay = document.getElementById('loadingOverlay');
     const errorContainer = document.getElementById('errorContainer');
     const errorText = document.getElementById('errorText');
     const newAnalysisBtn = document.getElementById('newAnalysisBtn');
     const downloadBtn = document.getElementById('downloadBtn');
-    const saveImageBtn = document.getElementById('saveImageBtn');
     const retryBtn = document.getElementById('retryBtn');
     const controlBar = document.getElementById('controlBar');
     const resultsContainer = document.getElementById('resultsContainer');
@@ -25,16 +25,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     const sidebarToggle = document.getElementById('sidebar-toggle');
     const sidebarToggleIcon = document.getElementById('sidebar-toggle-icon');
 
-    // Sidebar filter elements
+    // Filter elements (now in right panel)
     const patternTypeFilter = document.getElementById('pattern-type-filter');
     const topNInput = document.getElementById('top-n-input');
     const sidebarPatternList = document.getElementById('sidebar-pattern-list');
-
-    // Zoom controls
-    const zoomControls = document.getElementById('zoom-controls');
-    const zoomSlider = document.getElementById('zoom-slider');
-    const zoomRangeDisplay = document.getElementById('zoom-range-display');
-    const resetZoomBtn = document.getElementById('reset-zoom');
 
     // Control bar elements
     const stockInput = document.getElementById('stock-input');
@@ -61,18 +55,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const qualityGroup = document.getElementById('quality-group');
     const qualitySlider = document.getElementById('quality-slider');
     const qualityDisplay = document.getElementById('quality-display');
-
-    // Save modal
-    const saveModal = document.getElementById('save-modal');
-    const cancelSave = document.getElementById('cancel-save');
-    const confirmSave = document.getElementById('confirm-save');
-    const notebookSelect = document.getElementById('notebook-select');
-    const newNotebookForm = document.getElementById('new-notebook-form');
-    const newNotebookName = document.getElementById('new-notebook-name');
-    const saveNotes = document.getElementById('save-notes');
-
-    // Notebooks button
-    const notebooksBtn = document.getElementById('notebooksBtn');
 
     let chart = null;
     let allPatterns = [];
@@ -335,17 +317,14 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (!coords) return;
 
             if (activeTool === 'select' && selectedAnnotation && dragStartCoords && dragStartSnapshot) {
-                // Compute delta from drag start
                 const deltaXIndex = coords.xIndex - dragStartCoords.xIndex;
                 const deltaPrice = coords.price - dragStartCoords.price;
 
-                // Move start point using cached index
                 const newStartXIndex = dragStartSnapshot._startXIndex + deltaXIndex;
                 const clampedStartXIndex = Math.max(0, Math.min(currentStockData.length - 1, newStartXIndex));
                 selectedAnnotation.timestamp = currentStockData[clampedStartXIndex].Date;
                 selectedAnnotation.price = dragStartSnapshot.price + deltaPrice;
 
-                // Move end point for trend_line and arrow using cached index
                 if ((selectedAnnotation.type === 'trend_line' || selectedAnnotation.type === 'arrow') && dragStartSnapshot._endXIndex >= 0) {
                     const newEndXIndex = dragStartSnapshot._endXIndex + deltaXIndex;
                     const clampedEndXIndex = Math.max(0, Math.min(currentStockData.length - 1, newEndXIndex));
@@ -365,7 +344,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (isDrawing && drawingStart && coords) {
                 finishDrawingLine(drawingStart, coords);
             } else if (isDrawing && drawingStart) {
-                // Remove preview if pointer left canvas
                 if (chart && chart.options.plugins.annotation.annotations) {
                     delete chart.options.plugins.annotation.annotations['preview_line'];
                     delete chart.options.plugins.annotation.annotations['preview_line_arrowhead'];
@@ -415,7 +393,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
         canvas.setAttribute('tabindex', '0');
 
-        // Drag-and-drop support: allow dropping annotation tools onto the chart
+        // Drag-and-drop support
         canvas.addEventListener('dragover', (e) => e.preventDefault());
         canvas.addEventListener('drop', async (e) => {
             e.preventDefault();
@@ -455,7 +433,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     function updateAnnotationsOnChart() {
         if (!chart) return;
         const annConfig = renderAnnotations(chart, currentAnnotations, currentStockData);
-        // Rebuild all annotations: patterns + S&R + user annotations
         const patternAnns = createPatternAnnotations(
             (chart._lastFilteredPatterns || []), currentStockData
         );
@@ -514,50 +491,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         updateAnnotationsOnChart();
     }
 
-    // ---- Line-Up Toggle ----
-    async function loadLineupPref() {
-        return new Promise((resolve) => {
-            chrome.storage.local.get(['lineupHidden'], (result) => {
-                resolve(result.lineupHidden === true);
-            });
-        });
-    }
-
-    async function saveLineupPref(hidden) {
-        return new Promise((resolve) => {
-            chrome.storage.local.set({ lineupHidden: hidden }, resolve);
-        });
-    }
-
-    function updateLineupToggleIcon(hidden) {
-        const icon = document.getElementById('lineup-toggle-icon');
-        if (icon) icon.textContent = hidden ? '☰' : '✕';
-    }
-
-    async function initLineupToggle() {
-        const lineupHidden = await loadLineupPref();
-        if (lineupHidden) {
-            document.body.classList.add('lineup-hidden');
-        }
-        updateLineupToggleIcon(lineupHidden);
-
-        const toggle = document.getElementById('lineup-toggle');
-        if (toggle) {
-            toggle.addEventListener('click', async () => {
-                const isHidden = document.body.classList.toggle('lineup-hidden');
-                updateLineupToggleIcon(isHidden);
-                await saveLineupPref(isHidden);
-                // Resize chart after layout transition completes
-                setTimeout(() => {
-                    if (chart) {
-                        chart.resize();
-                        chart.update('none');
-                    }
-                }, LINEUP_TRANSITION_MS + 50);
-            });
-        }
-    }
-
     // ---- Support & Resistance Controls ----
     const srShowLevels = document.getElementById('sr-show-levels');
     const srSensitivity = document.getElementById('sr-sensitivity');
@@ -569,10 +502,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!currentStockData || currentStockData.length === 0) return;
         const sensitivity = srSensitivity ? parseInt(srSensitivity.value) : 5;
         const minStrength = srMinStrength ? parseInt(srMinStrength.value) : 2;
-        // sensitivity slider: 1=high tolerance(~1%), 10=tight(~0.1%), inverse relationship
         const clusterTolerance = 1.1 - (sensitivity / 10);
 
-        // Use visible data range if chart is zoomed (with buffer for context)
         let dataForSR = currentStockData;
         if (chart && chart.scales && chart.scales.x) {
             const SR_CONTEXT_BUFFER = 10;
@@ -631,7 +562,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    // Apply saved sidebar preference
     const sidebarHidden = await loadSidebarPref();
     if (sidebarHidden) {
         resultsContainer.classList.add('sidebar-hidden');
@@ -684,7 +614,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (e.target === downloadModal) downloadModal.classList.remove('show');
     });
 
-    // Update filename extension when format changes
     document.querySelectorAll('input[name="download-format"]').forEach(radio => {
         radio.addEventListener('change', () => {
             const fmt = radio.value;
@@ -717,98 +646,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             link.href = dataUrl;
             link.click();
             downloadModal.classList.remove('show');
-        });
-    }
-
-    // ---- Save Image Modal ----
-    async function populateNotebookSelect() {
-        if (!notebookSelect) return;
-        const notebooks = await NotebookManager.getAll();
-        // Clear options except the "Create New" option
-        notebookSelect.innerHTML = '<option value="__new__">+ Create New Notebook</option>';
-        notebooks.forEach(nb => {
-            const opt = document.createElement('option');
-            opt.value = nb.id;
-            opt.textContent = nb.name;
-            notebookSelect.appendChild(opt);
-        });
-        // If no notebooks exist, show new notebook form
-        if (notebooks.length === 0) {
-            if (newNotebookForm) newNotebookForm.classList.remove('hidden');
-        }
-    }
-
-    if (notebookSelect) {
-        notebookSelect.addEventListener('change', () => {
-            if (newNotebookForm) {
-                newNotebookForm.classList.toggle('hidden', notebookSelect.value !== '__new__');
-            }
-        });
-    }
-
-    if (saveImageBtn) {
-        saveImageBtn.addEventListener('click', async () => {
-            await populateNotebookSelect();
-            if (newNotebookForm) {
-                newNotebookForm.classList.toggle('hidden', !(notebookSelect && notebookSelect.value === '__new__'));
-            }
-            if (saveNotes) saveNotes.value = '';
-            saveModal.classList.add('show');
-        });
-    }
-
-    if (cancelSave) {
-        cancelSave.addEventListener('click', () => {
-            saveModal.classList.remove('show');
-        });
-    }
-
-    saveModal.addEventListener('click', (e) => {
-        if (e.target === saveModal) saveModal.classList.remove('show');
-    });
-
-    if (confirmSave) {
-        confirmSave.addEventListener('click', async () => {
-            const canvas = document.getElementById('stockChart');
-            if (!canvas) {
-                showReanalysisError('Chart not available to save.');
-                return;
-            }
-            confirmSave.disabled = true;
-            try {
-                const dataUrl = canvas.toDataURL('image/png');
-                let notebookId = notebookSelect ? notebookSelect.value : '__new__';
-                if (notebookId === '__new__') {
-                    const nbName = newNotebookName && newNotebookName.value.trim()
-                        ? newNotebookName.value.trim()
-                        : undefined;
-                    const nb = await NotebookManager.create(nbName);
-                    notebookId = nb.id;
-                }
-                const info = currentAnalysisInfo;
-                await NotebookManager.saveImage(notebookId, {
-                    dataUrl,
-                    symbol: info.symbol || '',
-                    interval: info.interval || '',
-                    startDate: info.startDate || '',
-                    endDate: info.endDate || '',
-                    patterns: allPatterns.slice(0, MAX_SAVED_PATTERNS).map(p => p.patternName),
-                    notes: saveNotes ? saveNotes.value.trim() : ''
-                });
-                saveModal.classList.remove('show');
-                showSuccessMessage('Image saved to notebook!');
-            } catch (err) {
-                showReanalysisError('Failed to save image: ' + err.message);
-            } finally {
-                confirmSave.disabled = false;
-            }
-        });
-    }
-
-    // ---- Notebooks Button ----
-    if (notebooksBtn) {
-        notebooksBtn.addEventListener('click', () => {
-            chrome.tabs.create({ url: chrome.runtime.getURL('notebooks/notebooks.html') });
         });
     }
 
@@ -871,6 +708,31 @@ document.addEventListener('DOMContentLoaded', async () => {
         const filterType = patternTypeFilter ? patternTypeFilter.value : 'all';
         const topN = topNInput ? parseInt(topNInput.value) || 15 : 15;
 
+        // Handle "none" - chart only, no patterns
+        if (filterType === 'none') {
+            const count = 0;
+            if (patternCountSidebar) patternCountSidebar.textContent = count;
+            const countDisplay = document.getElementById('pattern-count-display');
+            if (countDisplay) countDisplay.textContent = `${count} patterns found`;
+            if (sidebarPatternList) sidebarPatternList.innerHTML = '';
+            noPatterns.classList.add('hidden');
+
+            if (chart) {
+                chart._lastFilteredPatterns = [];
+                const srAnns = srVisible && srLevels.length > 0 ? createSRAnnotations(srLevels) : {};
+                const userAnns = renderAnnotations(chart, currentAnnotations, currentStockData);
+                chart.options.plugins.annotation.annotations = Object.assign({}, srAnns, userAnns);
+                chart.update('none');
+            } else if (currentStockData.length > 0) {
+                const canvas = document.getElementById('stockChart');
+                chart = createCandlestickChart('stockChart', currentStockData, [], srLevels);
+                chart._lastFilteredPatterns = [];
+                setupAnnotationInteraction(canvas);
+                if (typeof enableChartInteraction === 'function') enableChartInteraction(chart, canvas);
+            }
+            return;
+        }
+
         let filtered = allPatterns.filter(p => {
             if (filterType === 'all') return true;
             if (filterType === 'bullish') return p.type === 'bullish';
@@ -885,22 +747,24 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // Update UI
         const count = filtered.length;
-        if (patternCount) patternCount.textContent = `${count} pattern${count !== 1 ? 's' : ''}`;
         if (patternCountSidebar) patternCountSidebar.textContent = count;
+        const countDisplay = document.getElementById('pattern-count-display');
+        if (countDisplay) countDisplay.textContent = `${count} pattern${count !== 1 ? 's' : ''} found`;
 
         if (count === 0) {
             noPatterns.classList.remove('hidden');
         } else {
             noPatterns.classList.add('hidden');
             displaySidebarPatterns(filtered);
-            displayPatterns(filtered);
 
             if (!chart) {
+                const canvas = document.getElementById('stockChart');
                 chart = createCandlestickChart('stockChart', currentStockData, filtered, srLevels);
                 chart._lastFilteredPatterns = filtered;
+                setupAnnotationInteraction(canvas);
+                if (typeof enableChartInteraction === 'function') enableChartInteraction(chart, canvas);
             } else {
                 chart._lastFilteredPatterns = filtered;
-                // Rebuild annotations for filtered set
                 const patternAnns = createPatternAnnotations(filtered, currentStockData);
                 const srAnns = srVisible && srLevels.length > 0 ? createSRAnnotations(srLevels) : {};
                 const userAnns = renderAnnotations(chart, currentAnnotations, currentStockData);
@@ -913,23 +777,39 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Pattern educational content
     function getPatternDescription(patternName) {
         const name = patternName.toLowerCase();
-        if (name.includes('hammer')) return 'A hammer forms when price falls sharply but recovers near the open. The long lower shadow signals buyers stepped in — potential bullish reversal.';
         if (name.includes('bullish engulfing')) return 'A large bullish candle completely engulfs the prior bearish candle. Strong signal that buyers have taken control — potential upside move.';
         if (name.includes('bearish engulfing')) return 'A large bearish candle completely engulfs the prior bullish candle. Sellers have overpowered buyers — potential downside move.';
-        if (name.includes('hanging man')) return 'Looks like a hammer but appears in an uptrend. Signals that selling pressure is building despite the recovery — watch for reversal.';
-        if (name.includes('doji')) return 'Open and close are nearly equal, forming a cross. Indecision between buyers and sellers — often signals a trend pause or reversal.';
+        if (name.includes('bullish harami')) return 'A small bullish candle contained within the prior large bearish candle. Signals possible momentum loss in the downtrend — watch for reversal.';
+        if (name.includes('bearish harami')) return 'A small bearish candle contained within the prior large bullish candle. Signals possible momentum loss in the uptrend — watch for reversal.';
+        if (name.includes('harami cross')) return 'A doji candle inside the previous candle\'s range. Strong indecision signal — possible trend pause or reversal.';
+        if (name.includes('bullish counterattack')) return 'Two candles with matching closes: bearish then bullish. Buyers aggressively reclaimed lost ground — potential bullish reversal.';
+        if (name.includes('bearish counterattack')) return 'Two candles with matching closes: bullish then bearish. Sellers aggressively reclaimed gains — potential bearish reversal.';
         if (name.includes('three white soldiers')) return 'Three consecutive bullish candles with progressively higher closes. Strong confirmation of an uptrend.';
         if (name.includes('three black crows')) return 'Three consecutive bearish candles with progressively lower closes. Strong confirmation of a downtrend.';
         if (name.includes('abandoned baby')) return 'A rare three-candle pattern with a doji gap. Signals a sharp reversal and is considered highly reliable.';
         if (name.includes('tweezer top')) return 'Two candles with matching highs at resistance. Sellers defended the level — potential downside reversal.';
         if (name.includes('tweezer bottom')) return 'Two candles with matching lows at support. Buyers defended the level — potential upside reversal.';
+        if (name.includes('morning star')) return 'A three-candle bullish reversal: large bearish, small body, large bullish. Strong signal that selling pressure has exhausted.';
+        if (name.includes('evening star')) return 'A three-candle bearish reversal: large bullish, small body, large bearish. Strong signal that buying pressure has exhausted.';
+        if (name.includes('three inside up')) return 'A bullish reversal: harami followed by a strong close above the first candle. Confirms buyers stepping in.';
+        if (name.includes('three inside down')) return 'A bearish reversal: harami followed by a strong close below the first candle. Confirms sellers stepping in.';
+        if (name.includes('three outside up')) return 'A bullish reversal: engulfing pattern confirmed by a third bullish candle. High-conviction buy signal.';
+        if (name.includes('three outside down')) return 'A bearish reversal: engulfing pattern confirmed by a third bearish candle. High-conviction sell signal.';
+        if (name.includes('tri star bullish')) return 'Three consecutive dojis with the middle doji gapping down. Extreme indecision — potential bullish reversal.';
+        if (name.includes('tri star bearish')) return 'Three consecutive dojis with the middle doji gapping up. Extreme indecision — potential bearish reversal.';
+        if (name.includes('upside gap two crows')) return 'After a bullish candle, two bearish candles fill the gap. The trend may be reversing.';
+        if (name.includes('deliberation')) return 'Three ascending bullish candles with a small third body. The uptrend may be losing steam.';
+        if (name.includes('three line strike bearish')) return 'Three bearish candles followed by a large bullish candle. Counter-trend pullback — bearish trend likely continues.';
+        if (name.includes('three line strike bullish')) return 'Three bullish candles followed by a large bearish candle. Counter-trend pullback — bullish trend likely continues.';
+        if (name.includes('tasuki gap up')) return 'Gap-up continuation: bullish gap followed by a bearish candle that doesn\'t close the gap. Bullish trend likely continues.';
+        if (name.includes('separating lines bullish')) return 'A bearish candle followed by a bullish candle opening at the same price. Bullish continuation signal.';
+        if (name.includes('separating lines bearish')) return 'A bullish candle followed by a bearish candle opening at the same price. Bearish continuation signal.';
+        if (name.includes('matching high')) return 'Two candles closing at nearly the same high. Strong resistance level — potential reversal.';
         if (name.includes('rising three')) return 'A bullish continuation pattern: large bullish candle, three small retracements, then a new high. Trend likely continues up.';
         if (name.includes('falling three')) return 'A bearish continuation pattern: large bearish candle, three small rallies, then a new low. Trend likely continues down.';
         if (name.includes('liquiditysweephigh')) return 'Price swept above a prior high but closed back below it. Indicates a "stop hunt" — shorts may now be trapped, potential reversal.';
         if (name.includes('liquiditysweeplow')) return 'Price swept below a prior low but closed back above it. Indicates buyers absorbed the selling — potential upside move.';
-        if (name.includes('volatilityexpansion')) return 'Price range is significantly wider than average. Signals a surge in momentum — follow-through in the breakout direction is likely.';
-        if (name.includes('extremebody')) return 'An unusually large candle body relative to recent price action. Strong directional momentum in the candle\'s direction.';
-        return 'A confirmed candlestick pattern detected by the FLUEY algorithm. Monitor for follow-through confirmation.';
+        return 'A confirmed candlestick pattern detected by the Fluey algorithm. Monitor for follow-through confirmation.';
     }
 
     // Display patterns in sidebar
@@ -949,7 +829,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             item.innerHTML = `
                 <div class="pattern-item-header">
                     <span class="pattern-item-name">${pattern.patternName}</span>
-                    <span class="confidence-badge">${pattern.confidence}%</span>
                 </div>
                 <div class="pattern-item-meta">
                     <span class="pattern-item-date">${formattedDate}</span>
@@ -976,11 +855,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             item.addEventListener('click', (e) => {
                 if (e.target.classList.contains('read-more-toggle')) return;
                 activeZoomPatternIndex = pattern.index;
-                const buffer = parseInt(zoomSlider.value) || 5;
-                zoomChartToPattern(chart, currentStockData, pattern.index, buffer);
-                zoomControls.classList.remove('hidden');
+                zoomChartToPattern(chart, currentStockData, pattern.index, DEFAULT_ZOOM_BUFFER);
                 document.getElementById('stockChart').scrollIntoView({ behavior: 'smooth', block: 'center' });
-                // Highlight selected item
                 document.querySelectorAll('.pattern-item').forEach(el => el.classList.remove('selected'));
                 item.classList.add('selected');
             });
@@ -998,61 +874,90 @@ document.addEventListener('DOMContentLoaded', async () => {
             sidebarPatternList.appendChild(item);
         });
     }
-    
-    // Display patterns in table
-    function displayPatterns(patterns) {
-        patternsTable.innerHTML = '';
-        
-        patterns.forEach((pattern) => {
-            const row = document.createElement('div');
-            row.className = 'pattern-row';
-            
-            const action = getSuggestedAction(pattern.type, pattern.confidence);
-            const formattedDate = formatTimestamp(pattern.date);
-            
-            row.innerHTML = `
-                <div class="pattern-name">${pattern.patternName}</div>
-                <div class="pattern-date">${formattedDate}</div>
-                <div class="pattern-confidence">
-                    <div class="confidence-bar">
-                        <div class="confidence-fill"></div>
-                    </div>
-                    <span class="confidence-value">${pattern.confidence}%</span>
-                </div>
-                <div class="pattern-type ${pattern.type}">${pattern.type.toUpperCase()}</div>
-                <div class="pattern-action ${action.toLowerCase().replace(' ', '-')}">${action}</div>
-            `;
-            row.querySelector('.confidence-fill').style.width = `${pattern.confidence}%`;
-            
-            patternsTable.appendChild(row);
-        });
-    }
 
-    // Zoom slider interaction
-    if (zoomSlider) {
-        zoomSlider.addEventListener('input', () => {
-            const buffer = parseInt(zoomSlider.value);
-            if (zoomRangeDisplay) zoomRangeDisplay.textContent = `±${buffer} candles`;
-            if (activeZoomPatternIndex !== null && chart) {
-                zoomChartToPattern(chart, currentStockData, activeZoomPatternIndex, buffer);
-                updateSROverlay();
-            }
-        });
-    }
+    // ---- Refresh Time Feature ----
+    async function refreshChartToTime() {
+        const timeInput = document.getElementById('refresh-time-input');
+        const selectedTime = timeInput ? new Date(timeInput.value) : new Date();
+        if (isNaN(selectedTime.getTime())) {
+            showReanalysisError('Please enter a valid date/time.');
+            return;
+        }
 
-    if (resetZoomBtn) {
-        resetZoomBtn.addEventListener('click', () => {
-            activeZoomPatternIndex = null;
-            resetChartZoom(chart, currentStockData);
-            zoomControls.classList.add('hidden');
-            document.querySelectorAll('.pattern-item').forEach(el => el.classList.remove('selected'));
+        const lookbackAmount = parseInt(document.getElementById('lookback-amount')?.value || 30);
+        const lookbackUnit = document.getElementById('lookback-unit')?.value || 'days';
+
+        const startTime = new Date(selectedTime);
+        switch (lookbackUnit) {
+            case 'minutes': startTime.setMinutes(startTime.getMinutes() - lookbackAmount); break;
+            case 'hours': startTime.setHours(startTime.getHours() - lookbackAmount); break;
+            case 'days': startTime.setDate(startTime.getDate() - lookbackAmount); break;
+            case 'weeks': startTime.setDate(startTime.getDate() - (lookbackAmount * 7)); break;
+            case 'months': startTime.setMonth(startTime.getMonth() - lookbackAmount); break;
+        }
+
+        const symbol = currentSymbol || (stockInput ? stockInput.value.trim().toUpperCase() : '');
+        const interval = intervalSelector ? intervalSelector.value : '1day';
+
+        if (!symbol) {
+            showReanalysisError('No symbol selected.');
+            return;
+        }
+
+        loadingOverlay.classList.remove('hidden');
+        try {
+            const newData = await getStockData(symbol, startTime.toISOString(), selectedTime.toISOString(), interval);
+            currentAnalysisInfo = { symbol, startDate: startTime.toISOString(), endDate: selectedTime.toISOString(), interval, data: newData, timestamp: Date.now() };
+            await chrome.storage.local.set({ currentAnalysis: currentAnalysisInfo });
+            stockTitle.textContent = `${symbol} - Pattern Analysis`;
+            dateRange.textContent = `${formatTimestamp(startTime.toISOString())} to ${formatTimestamp(selectedTime.toISOString())}`;
+            runAnalysis(newData);
             updateSROverlay();
-        });
+            updateAnnotationsOnChart();
+        } catch (error) {
+            showReanalysisError(getErrorMessage(error.message));
+        } finally {
+            loadingOverlay.classList.add('hidden');
+        }
     }
 
     // Filter change listeners
     if (patternTypeFilter) patternTypeFilter.addEventListener('change', applyFilters);
     if (topNInput) topNInput.addEventListener('input', applyFilters);
+
+    const showAllBtn = document.getElementById('show-all-btn');
+    if (showAllBtn) {
+        showAllBtn.addEventListener('click', () => {
+            if (topNInput) topNInput.value = allPatterns.length || MAX_PATTERN_DISPLAY;
+            applyFilters();
+        });
+    }
+
+    const resetZoomBtn = document.getElementById('reset-zoom-btn');
+    if (resetZoomBtn) {
+        resetZoomBtn.addEventListener('click', () => {
+            if (chart && currentStockData) {
+                resetChartZoom(chart, currentStockData);
+                updateSROverlay();
+            }
+        });
+    }
+
+    const refreshChartBtn = document.getElementById('refresh-chart-btn');
+    if (refreshChartBtn) refreshChartBtn.addEventListener('click', refreshChartToTime);
+
+    const applyLookbackBtn = document.getElementById('apply-lookback-btn');
+    if (applyLookbackBtn) applyLookbackBtn.addEventListener('click', refreshChartToTime);
+
+    const showOhlcToggle = document.getElementById('show-ohlc-tooltip');
+    if (showOhlcToggle) {
+        showOhlcToggle.addEventListener('change', () => {
+            if (chart) {
+                chart.options.plugins.tooltip.enabled = showOhlcToggle.checked;
+                chart.update('none');
+            }
+        });
+    }
 
     // Re-analyze button
     if (reanalyzeBtn) {
@@ -1073,7 +978,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             try {
                 const newData = await getStockData(symbol, startDate, endDate, interval);
 
-                // Update stored analysis
                 currentAnalysisInfo = { symbol, startDate, endDate, interval, data: newData, timestamp: Date.now() };
                 await chrome.storage.local.set({ currentAnalysis: currentAnalysisInfo });
 
@@ -1182,7 +1086,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         if (reanalyzeBtn) reanalyzeBtn.click();
 
-        // Wait for reanalysis to complete before applying zoom/annotations
         const SNAPSHOT_LOAD_DELAY = 1500;
         setTimeout(() => {
             if (chart && snapshot.zoomState) {
@@ -1241,6 +1144,78 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
+    // ---- Line-Up Popup ----
+    function initLineupPopup() {
+        const popup = document.getElementById('lineup-popup');
+        const toggle = document.getElementById('lineup-popup-toggle');
+        const closeBtn = document.getElementById('lineup-popup-close');
+
+        if (!popup || !toggle) return;
+
+        toggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            popup.classList.toggle('active');
+            toggle.classList.toggle('active');
+        });
+
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => {
+                popup.classList.remove('active');
+                toggle.classList.remove('active');
+            });
+        }
+
+        document.addEventListener('click', (e) => {
+            if (popup && !popup.contains(e.target) && !toggle.contains(e.target)) {
+                popup.classList.remove('active');
+                toggle.classList.remove('active');
+            }
+        });
+    }
+
+    // ---- Resizable Panels ----
+    function makeResizable(panelEl, side) {
+        const resizer = document.createElement('div');
+        resizer.className = `panel-resizer panel-resizer-${side}`;
+        if (side === 'right') {
+            panelEl.appendChild(resizer);
+        } else {
+            panelEl.insertBefore(resizer, panelEl.firstChild);
+        }
+
+        let isResizing = false;
+        let startX = 0;
+        let startWidth = 0;
+
+        resizer.addEventListener('mousedown', (e) => {
+            isResizing = true;
+            startX = e.clientX;
+            startWidth = panelEl.offsetWidth;
+            document.body.style.cursor = 'ew-resize';
+            document.body.style.userSelect = 'none';
+            e.preventDefault();
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isResizing) return;
+            requestAnimationFrame(() => {
+                const delta = side === 'right' ? e.clientX - startX : startX - e.clientX;
+                const newWidth = Math.max(MIN_PANEL_WIDTH, Math.min(MAX_PANEL_WIDTH, startWidth + delta));
+                panelEl.style.width = newWidth + 'px';
+                panelEl.style.minWidth = newWidth + 'px';
+                if (chart) chart.resize();
+            });
+        });
+
+        document.addEventListener('mouseup', () => {
+            if (isResizing) {
+                isResizing = false;
+                document.body.style.cursor = '';
+                document.body.style.userSelect = '';
+            }
+        });
+    }
+
     // Load and process data
     try {
         const result = await chrome.storage.local.get(['currentAnalysis']);
@@ -1271,15 +1246,25 @@ document.addEventListener('DOMContentLoaded', async () => {
         currentSymbol = symbol;
         currentAnnotations = await loadAnnotations(symbol);
         initAnnotationToolbar();
-        setupAnnotationInteraction(document.getElementById('stockChart'));
+        const chartCanvas = document.getElementById('stockChart');
+        setupAnnotationInteraction(chartCanvas);
+        if (typeof enableChartInteraction === 'function' && chart) {
+            enableChartInteraction(chart, chartCanvas);
+        }
         updateSROverlay();
         initLineUp();
-        await initLineupToggle();
+        initLineupPopup();
 
         // Undo/redo/clear button listeners (added after toolbar is created)
         document.getElementById('undo-btn')?.addEventListener('click', undo);
         document.getElementById('redo-btn')?.addEventListener('click', redo);
         document.getElementById('clear-btn')?.addEventListener('click', clearAllAnnotations);
+
+        // Resizable panels
+        const sidebarEl = document.querySelector('.sidebar');
+        const rightPanelEl = document.querySelector('.right-panel');
+        if (sidebarEl) makeResizable(sidebarEl, 'right');
+        if (rightPanelEl) makeResizable(rightPanelEl, 'left');
 
         // Hide loading
         loadingOverlay.classList.add('hidden');

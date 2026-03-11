@@ -126,27 +126,7 @@ function register(name, candles, rule) {
     NEXT_ID += 1;
 }
 
-// CANONICAL JAPANESE PATTERNS (strengthened)
-register("Hammer", 1, f => {
-    const c = f[0];
-    // Lower shadow must be at least 60% of total range
-    const strongLowerShadow = c.lower_shadow_ratio >= 0.6;
-    // Body must be in upper 30% of range
-    const bodyAtTop = c.body_top_position >= 0.6;
-    // Minimal upper shadow
-    const smallUpper = c.upper_shadow_ratio <= 0.15;
-    // Volume confirmation
-    const volOk = c.aboveAvgVolume;
-    return c.long_lower && c.minimal_upper && strongLowerShadow && bodyAtTop && smallUpper && volOk;
-});
-
-register("Hanging Man", 1, f => {
-    const c = f[0];
-    const strongLowerShadow = c.lower_shadow_ratio >= 0.6;
-    const bodyAtTop = c.body_top_position >= 0.6;
-    const smallUpper = c.upper_shadow_ratio <= 0.15;
-    return c.long_lower && c.trend === "uptrend" && strongLowerShadow && bodyAtTop && smallUpper;
-});
+// 2+ CANDLE PATTERNS ONLY (single-candle patterns removed)
 
 register("Bullish Engulfing", 2, f => {
     const [prev, curr] = f;
@@ -218,26 +198,153 @@ register("Falling Three Methods", 5,
          f[1].bullish && f[2].bullish && f[3].bullish &&
          f[1].low > f[0].low && f[3].high < f[0].high);
 
-// STATISTICAL EXTREME PATTERNS
-["bullish", "bearish"].forEach(direction => {
-    register(`${direction}_ExtremeBody_2sigma`, 1,
-        f => f[0][direction] && f[0].body_ratio > LARGE_BODY && f[0].aboveAvgVolume);
+// ADDITIONAL 2-CANDLE PATTERNS
+register("Bullish Harami", 2, f => {
+    const [prev, curr] = f;
+    return prev.bearish && curr.bullish &&
+           curr.open > prev.close && curr.close < prev.open &&
+           curr.body < prev.body * 0.5;
 });
 
-// TREND-CONDITIONED AUTO EXPANSION
-const basePatterns = [...PATTERNS];
-basePatterns.forEach(pattern => {
-    ["uptrend", "downtrend"].forEach(trend => {
-        register(`${pattern.name}_in_${trend}`,
-            pattern.candles,
-            f => pattern.rule(f) && f[f.length - 1].trend === trend);
-    });
+register("Bearish Harami", 2, f => {
+    const [prev, curr] = f;
+    return prev.bullish && curr.bearish &&
+           curr.open < prev.close && curr.close > prev.open &&
+           curr.body < prev.body * 0.5;
 });
 
-// VOLATILITY EXPANSION
-[1.5, 2.0, 2.5].forEach(threshold => {
-    register(`VolatilityExpansion_${threshold}`, 1,
-        f => f[0].range > threshold * Math.max(f[0].volatility, 1e-12) && f[0].aboveAvgVolume);
+register("Harami Cross", 2, f => {
+    const [prev, curr] = f;
+    return (prev.bullish || prev.bearish) && curr.doji &&
+           curr.open > Math.min(prev.open, prev.close) &&
+           curr.close < Math.max(prev.open, prev.close);
+});
+
+register("Bullish Counterattack", 2, f => {
+    const [prev, curr] = f;
+    return prev.bearish && curr.bullish &&
+           Math.abs(curr.close - prev.close) / Math.max(prev.range, 1e-9) < 0.01 &&
+           curr.large_body && prev.large_body;
+});
+
+register("Bearish Counterattack", 2, f => {
+    const [prev, curr] = f;
+    return prev.bullish && curr.bearish &&
+           Math.abs(curr.close - prev.close) / Math.max(prev.range, 1e-9) < 0.01 &&
+           curr.large_body && prev.large_body;
+});
+
+register("Matching High", 2, f => {
+    const [prev, curr] = f;
+    return prev.bullish && curr.bearish &&
+           Math.abs(curr.close - prev.close) / Math.max(prev.range, 1e-9) < 0.005;
+});
+
+register("Tasuki Gap Up", 3, f => {
+    const [a, b, c] = f;
+    return a.bullish && b.bullish && c.bearish &&
+           b.open > a.close && // gap up
+           c.open < b.close && c.open > b.open &&
+           c.close > a.close && c.close < b.open;
+});
+
+register("Separating Lines Bullish", 2, f => {
+    const [prev, curr] = f;
+    return prev.bearish && curr.bullish &&
+           Math.abs(curr.open - prev.open) / Math.max(prev.range, 1e-9) < 0.005 &&
+           curr.large_body;
+});
+
+register("Separating Lines Bearish", 2, f => {
+    const [prev, curr] = f;
+    return prev.bullish && curr.bearish &&
+           Math.abs(curr.open - prev.open) / Math.max(prev.range, 1e-9) < 0.005 &&
+           curr.large_body;
+});
+
+// ADDITIONAL 3-CANDLE PATTERNS
+register("Morning Star", 3, f => {
+    const [a, b, c] = f;
+    return a.bearish && a.large_body &&
+           b.small_body &&
+           c.bullish && c.large_body &&
+           c.close > (a.open + a.close) / 2;
+});
+
+register("Evening Star", 3, f => {
+    const [a, b, c] = f;
+    return a.bullish && a.large_body &&
+           b.small_body &&
+           c.bearish && c.large_body &&
+           c.close < (a.open + a.close) / 2;
+});
+
+register("Three Inside Up", 3, f => {
+    const [a, b, c] = f;
+    return a.bearish && a.large_body &&
+           b.bullish && b.open > a.close && b.close < a.open && // harami
+           c.bullish && c.close > a.open;
+});
+
+register("Three Inside Down", 3, f => {
+    const [a, b, c] = f;
+    return a.bullish && a.large_body &&
+           b.bearish && b.open < a.close && b.close > a.open && // harami
+           c.bearish && c.close < a.open;
+});
+
+register("Three Outside Up", 3, f => {
+    const [a, b, c] = f;
+    return a.bearish &&
+           b.bullish && b.open < a.close && b.close > a.open && // engulfs
+           c.bullish && c.close > b.close;
+});
+
+register("Three Outside Down", 3, f => {
+    const [a, b, c] = f;
+    return a.bullish &&
+           b.bearish && b.open > a.close && b.close < a.open && // engulfs
+           c.bearish && c.close < b.close;
+});
+
+register("Tri Star Bullish", 3, f => {
+    return f[0].doji && f[1].doji && f[2].doji &&
+           f[1].low < f[0].low && f[1].low < f[2].low; // middle doji lowest
+});
+
+register("Tri Star Bearish", 3, f => {
+    return f[0].doji && f[1].doji && f[2].doji &&
+           f[1].high > f[0].high && f[1].high > f[2].high; // middle doji highest
+});
+
+register("Upside Gap Two Crows", 3, f => {
+    const [a, b, c] = f;
+    return a.bullish && a.large_body &&
+           b.bearish && b.gap_up &&
+           c.bearish && c.open > b.open && c.close < b.open && c.close > a.close;
+});
+
+register("Deliberation", 3, f => {
+    const [a, b, c] = f;
+    return a.bullish && a.large_body &&
+           b.bullish && b.large_body &&
+           c.bullish && c.small_body &&
+           b.close > a.close && c.close > b.close;
+});
+
+// 4-CANDLE PATTERNS
+register("Three Line Strike Bearish", 4, f => {
+    const [a, b, c, d] = f;
+    return a.bearish && b.bearish && c.bearish && d.bullish &&
+           b.close < a.close && c.close < b.close &&
+           d.open < c.close && d.close > a.open;
+});
+
+register("Three Line Strike Bullish", 4, f => {
+    const [a, b, c, d] = f;
+    return a.bullish && b.bullish && c.bullish && d.bearish &&
+           b.close > a.close && c.close > b.close &&
+           d.open > c.close && d.close < a.open;
 });
 
 // LIQUIDITY SWEEP PATTERNS
@@ -250,6 +357,16 @@ register("LiquiditySweepLow", 2,
     f => f[1].low < f[0].low &&
          f[1].close > f[0].low &&
          f[1].aboveAvgVolume);
+
+// TREND-CONDITIONED AUTO EXPANSION (2+ candle patterns only)
+const basePatterns = [...PATTERNS];
+basePatterns.forEach(pattern => {
+    ["uptrend", "downtrend"].forEach(trend => {
+        register(`${pattern.name}_in_${trend}`,
+            pattern.candles,
+            f => pattern.rule(f) && f[f.length - 1].trend === trend);
+    });
+});
 
 // SCANNER
 function buildFeatureMatrix(df) {

@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "RBT€",
+  "name": "Fluey",
   "version": "1.0.0",
-  "description": "Identify candlestick patterns using FLUEY algorithm",
+  "description": "Identify candlestick patterns using Fluey algorithm",
   "permissions": ["storage", "tabs"],
   "host_permissions": [
     "https://api.twelvedata.com/*",
@@ -13,7 +13,7 @@
   },
   "web_accessible_resources": [
     {
-      "resources": ["notebooks/notebooks.html", "lineup-gallery.html"],
+      "resources": ["lineup-gallery.html"],
       "matches": ["<all_urls>"]
     }
   ],

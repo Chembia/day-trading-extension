@@ -5,13 +5,7 @@ function calculatePatternConfidence(patternName, features, patternCandles) {
     const f = features[features.length - 1];
     
     // Pattern-specific scoring
-    if (patternName.includes("Hammer")) {
-        const shadowRatioScore = Math.min(100, (f.lower_shadow_ratio || 0) * 150);
-        const bodyPositionScore = Math.min(100, ((f.body_top_position || 0)) * 130);
-        const upperPenalty = f.upper_shadow_ratio > 0.15 ? 0.7 : 1.0;
-        score = (shadowRatioScore * 0.5 + bodyPositionScore * 0.5) * upperPenalty;
-    }
-    else if (patternName.includes("Engulfing")) {
+    if (patternName.includes("Engulfing")) {
         if (features.length >= 2) {
             const sizeRatio = features[1].body / Math.max(features[0].body, 0.001);
             score = Math.min(100, sizeRatio * 55);
@@ -31,21 +25,47 @@ function calculatePatternConfidence(patternName, features, patternCandles) {
     else if (patternName.includes("Rising Three Methods") || patternName.includes("Falling Three Methods")) {
         score = 91;
     }
-    else if (patternName.includes("ExtremeBody")) {
-        score = Math.min(100, f.body_ratio * 130);
+    else if (patternName.includes("Morning Star") || patternName.includes("Evening Star")) {
+        score = 89;
     }
-    else if (patternName.includes("VolatilityExpansion")) {
-        const volatilityRatio = f.range / Math.max(f.volatility, 0.001);
-        score = Math.min(100, volatilityRatio * 28);
+    else if (patternName.includes("Three Inside") || patternName.includes("Three Outside")) {
+        score = 87;
+    }
+    else if (patternName.includes("Harami Cross")) {
+        score = 82;
+    }
+    else if (patternName.includes("Harami")) {
+        score = 80;
+    }
+    else if (patternName.includes("Counterattack")) {
+        score = 83;
     }
     else if (patternName.includes("LiquiditySweep")) {
         score = 85;
     }
-    else if (patternName.includes("Hanging Man")) {
+    else if (patternName.includes("Tri Star")) {
+        score = 88;
+    }
+    else if (patternName.includes("Three Line Strike")) {
+        score = 84;
+    }
+    else if (patternName.includes("Deliberation")) {
+        score = 80;
+    }
+    else if (patternName.includes("Upside Gap Two Crows")) {
+        score = 83;
+    }
+    else if (patternName.includes("Tasuki Gap")) {
+        score = 82;
+    }
+    else if (patternName.includes("Separating Lines")) {
+        score = 79;
+    }
+    else if (patternName.includes("Matching High")) {
         score = 78;
     }
     else {
-        score = 72;
+        score = 75;
     }
     
     // Volume confirmation bonus
@@ -98,8 +118,8 @@ function filterPatterns(patternResults, features, df) {
             // Calculate confidence
             const confidence = calculatePatternConfidence(patternName, patternFeatures, patternCandles);
             
-            // Only include patterns with confidence > 72
-            if (confidence > 72) {
+            // Only include patterns with confidence > 75
+            if (confidence > 75) {
                 filteredPatterns.push({
                     index: idx,
                     patternId: parseInt(patternId),
@@ -130,18 +150,25 @@ function determinePatternType(patternName) {
     
     // Bullish patterns
     if (name.includes("bullish") || 
-        name.includes("hammer") || 
         name.includes("white soldiers") ||
         name.includes("rising") ||
+        name.includes("morning star") ||
+        name.includes("three inside up") ||
+        name.includes("three outside up") ||
+        name.includes("tri star bullish") ||
         name.includes("liquiditysweeplow")) {
         return "bullish";
     }
     
     // Bearish patterns
     if (name.includes("bearish") || 
-        name.includes("hanging man") || 
         name.includes("black crows") ||
         name.includes("falling") ||
+        name.includes("evening star") ||
+        name.includes("three inside down") ||
+        name.includes("three outside down") ||
+        name.includes("tri star bearish") ||
+        name.includes("upside gap two crows") ||
         name.includes("liquiditysweephigh")) {
         return "bearish";
     }

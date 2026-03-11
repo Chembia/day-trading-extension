@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RBT€ - Pattern Analysis Results</title>
+    <title>Fluey - Pattern Analysis Results</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -20,11 +20,6 @@
             <span id="sidebar-toggle-icon">✕</span>
         </button>
 
-        <!-- Line-Up Toggle Button - fixed right side, same height as sidebar toggle -->
-        <button id="lineup-toggle" class="lineup-toggle glass-container" title="Toggle Line-Up">
-            <span id="lineup-toggle-icon">✕</span>
-        </button>
-
         <header class="results-header glass-container">
             <div class="header-content">
                 <h1 id="stockTitle">Loading...</h1>
@@ -33,9 +28,6 @@
             <div class="header-actions">
                 <button id="newAnalysisBtn" class="glass-button">
                     New Analysis
-                </button>
-                <button id="notebooksBtn" class="glass-button glass-button-secondary">
-                    📓 Notebooks
                 </button>
                 <button id="settingsBtn" class="glass-button glass-button-secondary" title="Settings">⚙️</button>
             </div>
@@ -77,77 +69,29 @@
         </div>
         
         <main class="results-main">
-            <!-- Results Layout: Sidebar (left) + Main Content (right) -->
+            <!-- Results Layout: Sidebar (left) + Main Content (center) + Right Panel -->
             <div class="results-layout">
-                <!-- Sidebar (left) -->
+                <!-- Sidebar (left) - patterns list only -->
                 <aside class="sidebar glass-container">
                     <div class="sidebar-header">
                         <h3>Detected Patterns (<span id="pattern-count">0</span>)</h3>
                     </div>
-
-                    <!-- Filters -->
-                    <div class="filter-section">
-                        <div class="filter-group">
-                            <label for="pattern-type-filter">Filter by Type:</label>
-                            <select id="pattern-type-filter" class="glass-input filter-input">
-                                <option value="all">All Patterns</option>
-                                <option value="bullish">Bullish Only</option>
-                                <option value="bearish">Bearish Only</option>
-                                <option value="neutral">Neutral Only</option>
-                                <option value="hammer">Hammers</option>
-                                <option value="engulfing">Engulfing</option>
-                                <option value="doji">Doji</option>
-                                <option value="soldier">Soldiers / Crows</option>
-                                <option value="liquidity">Liquidity Sweeps</option>
-                                <option value="volatility">Volatility Expansion</option>
-                            </select>
-                        </div>
-                        <div class="filter-group">
-                            <label for="top-n-input">Show Top:</label>
-                            <div class="top-n-row">
-                                <input type="number" id="top-n-input" class="glass-input filter-input top-n" min="1" max="50" value="15">
-                                <span class="top-n-label">highest confidence</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Support & Resistance Controls -->
-                    <div class="sr-section">
-                        <div class="sr-header">
-                            <span class="sr-title">Support &amp; Resistance</span>
-                            <span class="sr-info-icon" title="Support is where price tends to stop falling. Resistance is where price tends to stop rising. These levels help identify potential entry and exit points." aria-label="Support and resistance info: Support is where price tends to stop falling. Resistance is where price tends to stop rising." role="tooltip">ⓘ</span>
-                        </div>
-                        <div class="sr-controls">
-                            <label class="sr-checkbox-label">
-                                <input type="checkbox" id="sr-show-levels" checked>
-                                Show Levels
-                            </label>
-                            <div class="sr-slider-group">
-                                <label for="sr-sensitivity">Sensitivity: <span id="sr-sensitivity-value">5</span></label>
-                                <input type="range" id="sr-sensitivity" min="1" max="10" value="5" class="sr-slider">
-                            </div>
-                            <div class="sr-slider-group">
-                                <label for="sr-min-strength">Min Strength: <span id="sr-min-strength-value">2</span></label>
-                                <input type="range" id="sr-min-strength" min="1" max="10" value="2" class="sr-slider">
-                            </div>
-                        </div>
-                    </div>
-
                     <!-- Pattern List -->
                     <div id="sidebar-pattern-list" class="sidebar-pattern-list">
                         <!-- Populated by JS -->
                     </div>
                 </aside>
 
-                <!-- Main Content (right) -->
+                <!-- Main Content (center) -->
                 <div class="main-content">
                     <!-- Chart Section -->
                     <section class="chart-section glass-container">
                         <div class="chart-section-header">
                             <h2>Candlestick Chart with Pattern Annotations</h2>
                             <div class="chart-actions">
-                                <button id="saveImageBtn" class="glass-button glass-button-secondary chart-action-btn">
-                                    💾 Save Image
+                                <span class="chart-hint">Shift+drag: zoom • Ctrl+drag: pan • Scroll: zoom</span>
+                                <button id="reset-zoom-btn" class="glass-button glass-button-secondary chart-action-btn" title="Reset Zoom">
+                                    🔍 Reset
                                 </button>
                                 <button id="downloadBtn" class="glass-button glass-button-secondary chart-action-btn">
                                     ⬇️ Download
@@ -158,30 +102,83 @@
                             <div id="annotation-toolbar-container" class="annotation-toolbar-container"></div>
                             <canvas id="stockChart"></canvas>
                         </div>
-                        <!-- Zoom Controls -->
-                        <div id="zoom-controls" class="zoom-controls hidden">
-                            <label>Zoom Range:</label>
-                            <input type="range" id="zoom-slider" min="1" max="50" value="5">
-                            <span id="zoom-range-display">±5 candles</span>
-                            <button id="reset-zoom" class="glass-button glass-button-secondary zoom-reset-btn">Reset</button>
-                        </div>
-                    </section>
-
-                    <!-- Patterns Summary (table) -->
-                    <section class="patterns-section glass-container">
-                        <div class="section-header">
-                            <h2>Pattern Details</h2>
-                            <span id="patternCount" class="pattern-badge">0 patterns</span>
-                        </div>
-                        
-                        <div id="noPatterns" class="no-patterns hidden">
-                            <p>No patterns found for the selected date range.</p>
-                            <p class="small-text">Try adjusting your date range or selecting a different stock.</p>
-                        </div>
-                        
-                        <div id="patternsTable" class="patterns-table"></div>
                     </section>
                 </div>
+
+                <!-- Right Panel -->
+                <aside class="right-panel glass-container">
+                    <div class="panel-section">
+                        <h3>Detected Patterns</h3>
+                        <p id="pattern-count-display">0 patterns found</p>
+                    </div>
+                    
+                    <div class="panel-section">
+                        <h3>Filter</h3>
+                        <select id="pattern-type-filter" class="glass-input filter-input">
+                            <option value="all">All Patterns</option>
+                            <option value="none">Chart Only (No Patterns)</option>
+                            <option value="bullish">Bullish</option>
+                            <option value="bearish">Bearish</option>
+                            <option value="neutral">Neutral</option>
+                        </select>
+                    </div>
+                    
+                    <div class="panel-section">
+                        <h3>Show Top</h3>
+                        <div class="show-top-controls">
+                            <input type="number" id="top-n-input" class="glass-input" value="15" min="1" max="999">
+                            <button id="show-all-btn" class="glass-button glass-button-secondary show-all-btn">All</button>
+                        </div>
+                    </div>
+                    
+                    <div class="panel-section">
+                        <h3>Support &amp; Resistance</h3>
+                        <div class="sr-header">
+                            <span class="sr-info-icon" title="Support is where price tends to stop falling. Resistance is where price tends to stop rising." role="tooltip">ⓘ</span>
+                        </div>
+                        <label class="sr-checkbox-label">
+                            <input type="checkbox" id="sr-show-levels" checked>
+                            Show Levels
+                        </label>
+                        <div class="sr-slider-group">
+                            <label for="sr-sensitivity">Sensitivity: <span id="sr-sensitivity-value">5</span></label>
+                            <input type="range" id="sr-sensitivity" min="1" max="10" value="5" class="sr-slider">
+                        </div>
+                        <div class="sr-slider-group">
+                            <label for="sr-min-strength">Min Strength: <span id="sr-min-strength-value">2</span></label>
+                            <input type="range" id="sr-min-strength" min="1" max="10" value="2" class="sr-slider">
+                        </div>
+                    </div>
+                    
+                    <div class="panel-section">
+                        <h3>Refresh Time</h3>
+                        <input type="datetime-local" id="refresh-time-input" class="glass-input">
+                        <button id="refresh-chart-btn" class="glass-button">Refresh</button>
+                    </div>
+                    
+                    <div class="panel-section">
+                        <h3>Lookback Period</h3>
+                        <div class="lookback-controls">
+                            <input type="number" id="lookback-amount" class="glass-input" value="30" min="1">
+                            <select id="lookback-unit" class="glass-input">
+                                <option value="minutes">Minutes</option>
+                                <option value="hours">Hours</option>
+                                <option value="days" selected>Days</option>
+                                <option value="weeks">Weeks</option>
+                                <option value="months">Months</option>
+                            </select>
+                        </div>
+                        <button id="apply-lookback-btn" class="glass-button">Apply</button>
+                    </div>
+                    
+                    <div class="panel-section">
+                        <h3>Display</h3>
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="show-ohlc-tooltip" checked>
+                            Show OHLC on Hover
+                        </label>
+                    </div>
+                </aside>
             </div>
         </main>
         
@@ -200,23 +197,38 @@
                 Return to Analyzer
             </button>
         </div>
+
+        <!-- No patterns message (hidden, used by JS) -->
+        <div id="noPatterns" class="no-patterns hidden">
+            <p>No patterns found for the selected filters.</p>
+        </div>
     </div>
 
     <!-- Help Button -->
     <button id="help-toggle" class="help-button" title="Help">❓</button>
 
-    <!-- Line-Up Container -->
-    <div id="lineup-container" class="glass-container">
-        <div id="lineup-header">
+    <!-- Line-Up Toggle Button -->
+    <button id="lineup-popup-toggle" class="lineup-popup-toggle" title="Line-Up Charts">
+        📊
+    </button>
+
+    <!-- Line-Up Popup -->
+    <div id="lineup-popup" class="lineup-popup glass-container">
+        <div id="lineup-header" class="lineup-popup-header">
             <h3>Line-Up</h3>
-            <button id="open-gallery" class="glass-button" title="Open Gallery View">
-                📊 Gallery
-            </button>
+            <div class="lineup-header-actions">
+                <button id="open-gallery" class="glass-button glass-button-secondary" title="Open Gallery View" style="font-size: 12px; padding: 4px 8px;">
+                    📊 Gallery
+                </button>
+                <button id="lineup-popup-close" class="glass-button glass-button-secondary" title="Close" style="font-size: 12px; padding: 4px 8px;">
+                    ✕
+                </button>
+            </div>
         </div>
         <button id="add-to-lineup" class="glass-button">
             ➕ Add Current Chart
         </button>
-        <div id="lineup-snapshots">
+        <div id="lineup-snapshots" class="lineup-popup-snapshots">
             <!-- Snapshot cards will be dynamically added here -->
         </div>
     </div>
@@ -258,16 +270,16 @@
 
             <div class="help-section">
                 <h4>3. Filtering Results</h4>
-                <p>• Use "Filter by Type" to show specific patterns<br>
-                   • Adjust "Show Top N" to limit results<br>
-                   • Higher confidence = more reliable signal</p>
+                <p>• Use "Filter" to show specific pattern types<br>
+                   • Adjust "Show Top" to limit results<br>
+                   • Use "Chart Only" to see chart without patterns</p>
             </div>
 
             <div class="help-section">
-                <h4>4. Changing Settings</h4>
-                <p>• Enter new stock symbol at the top control bar<br>
-                   • Change date range or interval<br>
-                   • Click "Re-Analyze" to fetch new data</p>
+                <h4>4. Refresh &amp; Lookback</h4>
+                <p>• Set a Refresh Time to load data up to that point<br>
+                   • Set Lookback Period to control how far back to look<br>
+                   • Click "Apply" or "Refresh" to reload the chart</p>
             </div>
 
             <button id="help-close" class="glass-button">Got it!</button>
@@ -329,35 +341,6 @@
         </div>
     </div>
 
-    <!-- Save Image Modal -->
-    <div id="save-modal" class="modal">
-        <div class="modal-content glass-container">
-            <div class="modal-header">
-                <h2>💾 Save to Notebook</h2>
-            </div>
-            <div class="modal-body">
-                <div class="form-group">
-                    <label for="notebook-select">Select Notebook</label>
-                    <select id="notebook-select" class="glass-input">
-                        <option value="__new__">+ Create New Notebook</option>
-                    </select>
-                </div>
-                <div id="new-notebook-form" class="form-group">
-                    <label for="new-notebook-name">Notebook Name</label>
-                    <input type="text" id="new-notebook-name" class="glass-input" placeholder="Notebook 1">
-                </div>
-                <div class="form-group">
-                    <label for="save-notes">Notes</label>
-                    <textarea id="save-notes" class="glass-input save-notes-textarea" placeholder="Add notes about this chart..."></textarea>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button id="cancel-save" class="glass-button glass-button-secondary">Cancel</button>
-                <button id="confirm-save" class="glass-button">Save</button>
-            </div>
-        </div>
-    </div>
-
     <script src="../scripts/api-client.js"></script>
     <script src="../scripts/fluey-algorithm.js"></script>
     <script src="../scripts/pattern-filter.js"></script>
@@ -365,7 +348,7 @@
     <script src="../scripts/chart-annotations.js"></script>
     <script src="../scripts/annotation-toolbar.js"></script>
     <script src="../scripts/chart-generator.js"></script>
-    <script src="../scripts/notebook-manager.js"></script>
+    <script src="../scripts/range-zoom.js"></script>
     <script src="../scripts/theme-manager.js"></script>
     <script src="results.js"></script>
 </body>
