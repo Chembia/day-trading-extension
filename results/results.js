@@ -719,6 +719,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         const filterType = patternTypeFilter ? patternTypeFilter.value : 'all';
         const topN = topNInput ? parseInt(topNInput.value) || 5 : 5;
 
+        // Get selected cluster sizes
+        const clusterCheckboxes = document.querySelectorAll('.cluster-checkbox:checked');
+        const selectedSizes = Array.from(clusterCheckboxes).map(cb => parseInt(cb.value));
+
         // Handle "none" - chart only, no patterns
         if (filterType === 'none') {
             const count = 0;
@@ -751,6 +755,19 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (filterType === 'neutral') return p.type === 'neutral';
             return p.patternName.toLowerCase().includes(filterType);
         });
+
+        // Apply cluster size filter (if no sizes selected, show nothing)
+        if (selectedSizes.length === 0) {
+            filtered = [];
+        } else {
+            filtered = filtered.filter(p => {
+                const patternLength = p.candles !== undefined ? p.candles : 2;
+                return selectedSizes.some(size => {
+                    if (size === 5) return patternLength >= 5;
+                    return patternLength === size;
+                });
+            });
+        }
 
         // Sort by confidence, take top N
         filtered.sort((a, b) => b.confidence - a.confidence);
@@ -1043,6 +1060,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Filter change listeners
     if (patternTypeFilter) patternTypeFilter.addEventListener('change', applyFilters);
     if (topNInput) topNInput.addEventListener('input', applyFilters);
+
+    document.querySelectorAll('.cluster-checkbox').forEach(cb => {
+        cb.addEventListener('change', applyFilters);
+    });
 
     const showAllBtn = document.getElementById('show-all-btn');
     if (showAllBtn) {
