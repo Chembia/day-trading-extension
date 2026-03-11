@@ -6,7 +6,7 @@
     <title>Fluey - Pattern Analysis Results</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;500;600;700&family=Chewy&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../styles/common.css">
     <link rel="stylesheet" href="results.css">
     <script src="../scripts/lib/chart.umd.min.js"></script>
@@ -14,6 +14,9 @@
     <script src="../scripts/lib/chartjs-plugin-annotation.min.js"></script>
 </head>
 <body>
+    <!-- FLUEY brand in top-left corner -->
+    <div class="fluey-brand-overlay">FLUEY</div>
+
     <div id="resultsContainer" class="results-container">
         <header class="results-header glass-container">
             <div class="header-content">
@@ -85,6 +88,10 @@
                     <!-- Chart Section -->
                     <section class="chart-section glass-container">
                         <div class="chart-section-header">
+                            <button id="patterns-list-toggle" class="chart-toggle-btn" title="Toggle Patterns List">
+                                <span class="toggle-icon">◀</span>
+                                <span class="toggle-label">Patterns List</span>
+                            </button>
                             <h2>Candlestick Chart with Pattern Annotations</h2>
                             <div class="chart-actions">
                                 <span class="chart-hint">Shift+drag: zoom • Ctrl+drag: pan • Scroll: zoom</span>
@@ -97,10 +104,6 @@
                             </div>
                         </div>
                         <div class="chart-wrapper">
-                            <button id="patterns-list-toggle" class="chart-toggle-btn" title="Toggle Patterns List">
-                                <span class="toggle-icon">◀</span>
-                                <span class="toggle-label">Patterns List</span>
-                            </button>
                             <div id="annotation-toolbar-container" class="annotation-toolbar-container"></div>
                             <canvas id="stockChart"></canvas>
                         </div>
@@ -295,6 +298,13 @@
                     <label class="setting-label" for="show-ohlc-tooltip">Show Price Details on Hover</label>
                     <label class="toggle-switch">
                         <input type="checkbox" id="show-ohlc-tooltip" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <div class="setting-item">
+                    <label class="setting-label" for="show-pattern-labels">Show Pattern Names on Chart</label>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="show-pattern-labels" checked>
                         <span class="toggle-slider"></span>
                     </label>
                 </div>

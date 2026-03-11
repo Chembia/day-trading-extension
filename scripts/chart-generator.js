@@ -117,8 +117,8 @@ function createPatternAnnotations(patterns, stockData) {
     }
     const annotations = {};
     const isDark = typeof document !== 'undefined' &&
-        document.body && document.body.dataset.theme === 'dark';
-    const labelColor = isDark ? '#FFFFF3' : '#2C2C2C';
+        document.documentElement && document.documentElement.dataset.theme === 'dark';
+    const labelColor = isDark ? '#FFFFFF' : '#2C2C2C';
     
     patterns.forEach((pattern, idx) => {
         const startIdx = Math.max(0, pattern.index - pattern.candles + 1);
