@@ -22,8 +22,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const resultsContainer = document.getElementById('resultsContainer');
 
     // Sidebar
-    const sidebarToggle = document.getElementById('sidebar-toggle');
-    const sidebarToggleIcon = document.getElementById('sidebar-toggle-icon');
+    const patternsListToggle = document.getElementById('patterns-list-toggle');
 
     // Filter elements (now in right panel)
     const patternTypeFilter = document.getElementById('pattern-type-filter');
@@ -58,6 +57,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     let chart = null;
     let allPatterns = [];
+    let allDetectedPatterns = []; // Store all detected patterns for smart filtering
     let currentStockData = [];
     let currentAnalysisInfo = {};
     let activeZoomPatternIndex = null;
@@ -557,8 +557,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     function updateSidebarToggleIcon(hidden) {
-        if (sidebarToggleIcon) {
-            sidebarToggleIcon.textContent = hidden ? '☰' : '✕';
+        if (patternsListToggle) {
+            const icon = patternsListToggle.querySelector('.toggle-icon');
+            if (icon) icon.textContent = hidden ? '▶' : '◀';
         }
     }
 
@@ -568,11 +569,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     updateSidebarToggleIcon(sidebarHidden);
 
-    if (sidebarToggle) {
-        sidebarToggle.addEventListener('click', async () => {
+    if (patternsListToggle) {
+        patternsListToggle.addEventListener('click', async () => {
             const isHidden = resultsContainer.classList.toggle('sidebar-hidden');
             updateSidebarToggleIcon(isHidden);
             await saveSidebarPref(isHidden);
+            // Trigger chart resize after sidebar animation
+            setTimeout(() => {
+                if (chart) {
+                    chart.resize();
+                    chart.update('none');
+                }
+            }, 400);
         });
     }
 
@@ -698,6 +706,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const filtered = filterPatterns(patternResults, features, data);
 
         allPatterns = filtered;
+        allDetectedPatterns = filtered; // Store all patterns for smart filtering
         currentStockData = data;
 
         applyFilters();
@@ -757,6 +766,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             noPatterns.classList.add('hidden');
             displaySidebarPatterns(filtered);
 
+            // Apply smart annotation filtering for chart display
+            const chartPatterns = (typeof calculateVisibleAnnotations === 'function' && chart)
+                ? calculateVisibleAnnotations(chart, filtered, currentStockData)
+                : filtered;
+
             if (!chart) {
                 const canvas = document.getElementById('stockChart');
                 chart = createCandlestickChart('stockChart', currentStockData, filtered, srLevels);
@@ -765,7 +779,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 if (typeof enableChartInteraction === 'function') enableChartInteraction(chart, canvas);
             } else {
                 chart._lastFilteredPatterns = filtered;
-                const patternAnns = createPatternAnnotations(filtered, currentStockData);
+                const patternAnns = createPatternAnnotations(chartPatterns, currentStockData);
                 const srAnns = srVisible && srLevels.length > 0 ? createSRAnnotations(srLevels) : {};
                 const userAnns = renderAnnotations(chart, currentAnnotations, currentStockData);
                 chart.options.plugins.annotation.annotations = Object.assign({}, patternAnns, srAnns, userAnns);
@@ -921,6 +935,106 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
+    // ---- Simplified Refresh Button with Lookback Popup ----
+    async function refreshToCurrentTime(lookbackAmount, lookbackUnit) {
+        const endTime = new Date(); // Current device time
+        const startTime = new Date(endTime);
+
+        switch (lookbackUnit) {
+            case 'minutes': startTime.setMinutes(startTime.getMinutes() - lookbackAmount); break;
+            case 'hours': startTime.setHours(startTime.getHours() - lookbackAmount); break;
+            case 'days': startTime.setDate(startTime.getDate() - lookbackAmount); break;
+            case 'weeks': startTime.setDate(startTime.getDate() - (lookbackAmount * 7)); break;
+            case 'months': startTime.setMonth(startTime.getMonth() - lookbackAmount); break;
+        }
+
+        const symbol = currentSymbol || (stockInput ? stockInput.value.trim().toUpperCase() : '');
+        const interval = intervalSelector ? intervalSelector.value : '1day';
+
+        if (!symbol) {
+            showReanalysisError('No symbol selected.');
+            return;
+        }
+
+        loadingOverlay.classList.remove('hidden');
+        try {
+            const newData = await getStockData(symbol, startTime.toISOString(), endTime.toISOString(), interval);
+            if (!newData || newData.length === 0) {
+                throw new Error('No data available for the selected period');
+            }
+            currentAnalysisInfo = { symbol, startDate: startTime.toISOString(), endDate: endTime.toISOString(), interval, data: newData, timestamp: Date.now() };
+            await chrome.storage.local.set({ currentAnalysis: currentAnalysisInfo });
+            stockTitle.textContent = `${symbol} - Pattern Analysis`;
+            dateRange.textContent = `${formatTimestamp(startTime.toISOString())} to ${formatTimestamp(endTime.toISOString())}`;
+            runAnalysis(newData);
+            updateSROverlay();
+            updateAnnotationsOnChart();
+            showSuccessMessage(`Chart refreshed to ${endTime.toLocaleString()}`);
+        } catch (error) {
+            showReanalysisError(getErrorMessage(error.message));
+        } finally {
+            loadingOverlay.classList.add('hidden');
+        }
+    }
+
+    function showLookbackPopup() {
+        // Remove existing popup if any
+        const existingPopup = document.querySelector('.lookback-popup');
+        if (existingPopup) existingPopup.remove();
+        const existingOverlay = document.querySelector('.popup-overlay');
+        if (existingOverlay) existingOverlay.remove();
+
+        const popup = document.createElement('div');
+        popup.className = 'lookback-popup glass-container';
+        popup.innerHTML = `
+            <h3>Refresh to Current Time</h3>
+            <p class="popup-description">Set lookback period from now:</p>
+            <div class="lookback-input-group">
+                <input type="number" id="lookback-popup-amount" value="1" min="1" max="365">
+                <select id="lookback-popup-unit">
+                    <option value="minutes">Minutes</option>
+                    <option value="hours">Hours</option>
+                    <option value="days" selected>Days</option>
+                    <option value="weeks">Weeks</option>
+                    <option value="months">Months</option>
+                </select>
+            </div>
+            <div class="popup-actions">
+                <button id="cancel-lookback-popup" class="glass-button glass-button-secondary">Cancel</button>
+                <button id="apply-lookback-popup" class="glass-button">Apply</button>
+            </div>
+        `;
+        document.body.appendChild(popup);
+
+        const overlay = document.createElement('div');
+        overlay.className = 'popup-overlay';
+        document.body.appendChild(overlay);
+
+        requestAnimationFrame(() => {
+            popup.classList.add('active');
+            overlay.classList.add('active');
+        });
+
+        const closePopup = () => {
+            popup.classList.remove('active');
+            overlay.classList.remove('active');
+            setTimeout(() => {
+                popup.remove();
+                overlay.remove();
+            }, 300);
+        };
+
+        document.getElementById('cancel-lookback-popup').onclick = closePopup;
+        overlay.onclick = closePopup;
+
+        document.getElementById('apply-lookback-popup').onclick = async () => {
+            const amount = parseInt(document.getElementById('lookback-popup-amount').value) || 1;
+            const unit = document.getElementById('lookback-popup-unit').value;
+            closePopup();
+            await refreshToCurrentTime(amount, unit);
+        };
+    }
+
     // Filter change listeners
     if (patternTypeFilter) patternTypeFilter.addEventListener('change', applyFilters);
     if (topNInput) topNInput.addEventListener('input', applyFilters);
@@ -948,6 +1062,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const applyLookbackBtn = document.getElementById('apply-lookback-btn');
     if (applyLookbackBtn) applyLookbackBtn.addEventListener('click', refreshChartToTime);
+
+    const refreshTimeBtn = document.getElementById('refresh-time-btn');
+    if (refreshTimeBtn) refreshTimeBtn.addEventListener('click', showLookbackPopup);
 
     const showOhlcToggle = document.getElementById('show-ohlc-tooltip');
     if (showOhlcToggle) {

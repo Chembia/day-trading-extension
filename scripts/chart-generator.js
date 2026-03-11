@@ -171,13 +171,15 @@ function createPatternAnnotations(patterns, stockData) {
                 display: true,
                 content: pattern.patternName,
                 position: 'start',
+                yAdjust: -20,
                 backgroundColor: borderColor,
                 color: labelColor,
                 font: {
                     size: 10,
                     weight: 'bold'
                 },
-                padding: 4
+                padding: 4,
+                borderRadius: 4
             }
         };
     });

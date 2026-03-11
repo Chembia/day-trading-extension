@@ -15,11 +15,6 @@
 </head>
 <body>
     <div id="resultsContainer" class="results-container">
-        <!-- Sidebar toggle - fixed left side -->
-        <button id="sidebar-toggle" class="glass-button" title="Toggle Sidebar">
-            <span id="sidebar-toggle-icon">✕</span>
-        </button>
-
         <header class="results-header glass-container">
             <div class="header-content">
                 <h1 id="stockTitle">Loading...</h1>
@@ -99,6 +94,10 @@
                             </div>
                         </div>
                         <div class="chart-wrapper">
+                            <button id="patterns-list-toggle" class="chart-toggle-btn" title="Toggle Patterns List">
+                                <span class="toggle-icon">◀</span>
+                                <span class="toggle-label">Patterns List</span>
+                            </button>
                             <div id="annotation-toolbar-container" class="annotation-toolbar-container"></div>
                             <canvas id="stockChart"></canvas>
                         </div>
@@ -152,23 +151,9 @@
                     
                     <div class="panel-section">
                         <h3>Refresh Time</h3>
-                        <input type="datetime-local" id="refresh-time-input" class="glass-input">
-                        <button id="refresh-chart-btn" class="glass-button">Refresh</button>
-                    </div>
-                    
-                    <div class="panel-section">
-                        <h3>Lookback Period</h3>
-                        <div class="lookback-controls">
-                            <input type="number" id="lookback-amount" class="glass-input" value="30" min="1">
-                            <select id="lookback-unit" class="glass-input">
-                                <option value="minutes">Minutes</option>
-                                <option value="hours">Hours</option>
-                                <option value="days" selected>Days</option>
-                                <option value="weeks">Weeks</option>
-                                <option value="months">Months</option>
-                            </select>
-                        </div>
-                        <button id="apply-lookback-btn" class="glass-button">Apply</button>
+                        <button id="refresh-time-btn" class="glass-button">
+                            <span>⏱️</span> Refresh to Now
+                        </button>
                     </div>
                     
                     <div class="panel-section">
@@ -209,7 +194,8 @@
 
     <!-- Line-Up Toggle Button -->
     <button id="lineup-popup-toggle" class="lineup-popup-toggle" title="Line-Up Charts">
-        📊
+        <span class="lineup-icon">📊</span>
+        <span class="lineup-label">Chart Line-Up</span>
     </button>
 
     <!-- Line-Up Popup -->
@@ -350,6 +336,7 @@
     <script src="../scripts/chart-generator.js"></script>
     <script src="../scripts/range-zoom.js"></script>
     <script src="../scripts/theme-manager.js"></script>
+    <script src="../scripts/smart-annotations.js"></script>
     <script src="results.js"></script>
 </body>
 </html>
