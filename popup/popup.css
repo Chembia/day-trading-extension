@@ -5,35 +5,22 @@ body {
     min-height: 500px;
     margin: 0;
     padding: 0;
-    background: linear-gradient(
-        135deg,
-        rgba(208, 250, 249, 0.4) 0%,
-        rgba(165, 214, 235, 0.3) 25%,
-        rgba(255, 255, 255, 0.2) 50%,
-        rgba(247, 205, 255, 0.25) 75%,
-        rgba(208, 250, 249, 0.4) 100%
-    );
-    background-size: 400% 400%;
-    animation: gradientShift 15s ease infinite;
+    background-image: url('../assets/fluey_light-mode_background.jpg');
+    background-size: 110% 110%;
+    background-position: 0% 0%;
+    animation: bgPan 20s ease-in-out infinite alternate;
 }
 
-@keyframes gradientShift {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
+@keyframes bgPan {
+    0% { background-position: 0% 0%; }
+    100% { background-position: 100% 100%; }
 }
 
 [data-theme="dark"] body {
-    background: linear-gradient(
-        135deg,
-        rgba(20, 30, 48, 1) 0%,
-        rgba(36, 59, 85, 1) 25%,
-        rgba(30, 20, 45, 1) 50%,
-        rgba(28, 37, 65, 1) 75%,
-        rgba(20, 30, 48, 1) 100%
-    );
-    background-size: 400% 400%;
-    animation: gradientShift 15s ease infinite;
+    background-image: url('../assets/fluey_dark-mode_background.jpg');
+    background-size: 110% 110%;
+    background-position: 0% 0%;
+    animation: bgPan 20s ease-in-out infinite alternate;
 }
 
 .popup-container {
@@ -52,6 +39,14 @@ body {
     font-weight: 700;
     color: var(--text-primary);
     margin: 0;
+}
+
+.fluey-brand {
+    font-family: 'Chewy', cursive;
+    font-size: 28px;
+    letter-spacing: 2px;
+    margin: 0;
+    color: var(--text-primary);
 }
 
 .icon-btn {
@@ -107,11 +102,6 @@ body {
 }
 
 /* Dark Mode */
-[data-theme="dark"] body {
-    background: linear-gradient(135deg, #1a1a1a, #121212);
-    color: var(--text-primary);
-}
-
 [data-theme="dark"] h1,
 [data-theme="dark"] label,
 [data-theme="dark"] input,

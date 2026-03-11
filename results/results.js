@@ -67,6 +67,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     let trendLineStart = null;
     let srLevels = [];
     let srVisible = true;
+    let patternLabelsVisible = true;
 
     // Annotation interaction state
     let selectedAnnotation = null;
@@ -438,6 +439,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             ? calculateVisibleAnnotations(chart, allFilteredPatterns, currentStockData)
             : allFilteredPatterns;
         const patternAnns = createPatternAnnotations(chartPatterns, currentStockData);
+        // Apply pattern label visibility preference
+        Object.values(patternAnns).forEach(ann => {
+            if (ann.label) ann.label.display = patternLabelsVisible;
+        });
         const srAnns = srVisible && srLevels.length > 0
             ? createSRAnnotations(srLevels)
             : {};
@@ -801,6 +806,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             chart._lastFilteredPatterns = filtered;
             const patternAnns = createPatternAnnotations(chartPatterns, currentStockData);
+            // Apply pattern label visibility preference
+            Object.values(patternAnns).forEach(ann => {
+                if (ann.label) ann.label.display = patternLabelsVisible;
+            });
             const srAnns = srVisible && srLevels.length > 0 ? createSRAnnotations(srLevels) : {};
             const userAnns = renderAnnotations(chart, currentAnnotations, currentStockData);
             chart.options.plugins.annotation.annotations = Object.assign({}, patternAnns, srAnns, userAnns);
@@ -1109,6 +1118,20 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
+    const showPatternLabelsToggle = document.getElementById('show-pattern-labels');
+    if (showPatternLabelsToggle) {
+        // Load saved pattern labels preference
+        chrome.storage.local.get(['patternLabelsVisible'], (result) => {
+            patternLabelsVisible = result.patternLabelsVisible !== false; // default true
+            showPatternLabelsToggle.checked = patternLabelsVisible;
+        });
+        showPatternLabelsToggle.addEventListener('change', () => {
+            patternLabelsVisible = showPatternLabelsToggle.checked;
+            chrome.storage.local.set({ patternLabelsVisible: patternLabelsVisible });
+            updateAnnotationsOnChart();
+        });
+    }
+
     // Re-analyze button
     if (reanalyzeBtn) {
         reanalyzeBtn.addEventListener('click', async () => {
@@ -1361,8 +1384,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Load and process data
     try {
-        const result = await chrome.storage.local.get(['currentAnalysis']);
+        const result = await chrome.storage.local.get(['currentAnalysis', 'patternLabelsVisible']);
         const analysis = result.currentAnalysis;
+        // Load patternLabelsVisible preference before running analysis
+        if (result.patternLabelsVisible !== undefined) {
+            patternLabelsVisible = result.patternLabelsVisible;
+            const toggle = document.getElementById('show-pattern-labels');
+            if (toggle) toggle.checked = patternLabelsVisible;
+        }
         
         if (!analysis || !analysis.data) {
             throw new Error('No analysis data found. Please run a new analysis.');
