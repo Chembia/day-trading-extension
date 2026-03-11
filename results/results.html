@@ -61,6 +61,9 @@
             <button id="reanalyze-btn" class="glass-button reanalyze-btn">
                 🔄 Re-Analyze
             </button>
+            <button id="refresh-time-btn" class="glass-button refresh-time-btn">
+                ⏱️ Refresh Time
+            </button>
         </div>
         
         <main class="results-main">
@@ -125,7 +128,7 @@
                     <div class="panel-section">
                         <h3>Show Top</h3>
                         <div class="show-top-controls">
-                            <input type="number" id="top-n-input" class="glass-input" value="15" min="1" max="999">
+                            <input type="number" id="top-n-input" class="glass-input" value="5" min="1" max="999">
                             <button id="show-all-btn" class="glass-button glass-button-secondary show-all-btn">All</button>
                         </div>
                     </div>
@@ -144,16 +147,9 @@
                             <input type="range" id="sr-sensitivity" min="1" max="10" value="5" class="sr-slider">
                         </div>
                         <div class="sr-slider-group">
-                            <label for="sr-min-strength">Min Strength: <span id="sr-min-strength-value">2</span></label>
-                            <input type="range" id="sr-min-strength" min="1" max="10" value="2" class="sr-slider">
+                            <label for="sr-min-strength">Min Strength: <span id="sr-min-strength-value">3</span></label>
+                            <input type="range" id="sr-min-strength" min="1" max="10" value="3" class="sr-slider">
                         </div>
-                    </div>
-                    
-                    <div class="panel-section">
-                        <h3>Refresh Time</h3>
-                        <button id="refresh-time-btn" class="glass-button">
-                            <span>⏱️</span> Refresh to Now
-                        </button>
                     </div>
                     
                     <div class="panel-section">

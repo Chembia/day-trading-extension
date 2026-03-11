@@ -433,9 +433,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     function updateAnnotationsOnChart() {
         if (!chart) return;
         const annConfig = renderAnnotations(chart, currentAnnotations, currentStockData);
-        const patternAnns = createPatternAnnotations(
-            (chart._lastFilteredPatterns || []), currentStockData
-        );
+        const allFilteredPatterns = chart._lastFilteredPatterns || [];
+        const chartPatterns = (typeof calculateVisibleAnnotations === 'function' && currentStockData.length > 0)
+            ? calculateVisibleAnnotations(chart, allFilteredPatterns, currentStockData)
+            : allFilteredPatterns;
+        const patternAnns = createPatternAnnotations(chartPatterns, currentStockData);
         const srAnns = srVisible && srLevels.length > 0
             ? createSRAnnotations(srLevels)
             : {};
@@ -715,7 +717,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Apply sidebar filters and update display
     function applyFilters() {
         const filterType = patternTypeFilter ? patternTypeFilter.value : 'all';
-        const topN = topNInput ? parseInt(topNInput.value) || 15 : 15;
+        const topN = topNInput ? parseInt(topNInput.value) || 5 : 5;
 
         // Handle "none" - chart only, no patterns
         if (filterType === 'none') {
@@ -737,7 +739,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 chart = createCandlestickChart('stockChart', currentStockData, [], srLevels);
                 chart._lastFilteredPatterns = [];
                 setupAnnotationInteraction(canvas);
-                if (typeof enableChartInteraction === 'function') enableChartInteraction(chart, canvas);
+                if (typeof enableChartInteraction === 'function') enableChartInteraction(chart, canvas, { onZoomChange: updateAnnotationsOnChart });
             }
             return;
         }
@@ -772,7 +774,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 chart = createCandlestickChart('stockChart', currentStockData, [], srLevels);
                 chart._lastFilteredPatterns = filtered;
                 setupAnnotationInteraction(canvas);
-                if (typeof enableChartInteraction === 'function') enableChartInteraction(chart, canvas);
+                if (typeof enableChartInteraction === 'function') enableChartInteraction(chart, canvas, { onZoomChange: updateAnnotationsOnChart });
             }
 
             // Apply smart annotation filtering for chart display
@@ -871,6 +873,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 if (e.target.classList.contains('read-more-toggle')) return;
                 activeZoomPatternIndex = pattern.index;
                 zoomChartToPattern(chart, currentStockData, pattern.index, DEFAULT_ZOOM_BUFFER);
+                updateAnnotationsOnChart();
                 document.getElementById('stockChart').scrollIntoView({ behavior: 'smooth', block: 'center' });
                 document.querySelectorAll('.pattern-item').forEach(el => el.classList.remove('selected'));
                 item.classList.add('selected');
@@ -1055,6 +1058,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (chart && currentStockData) {
                 resetChartZoom(chart, currentStockData);
                 updateSROverlay();
+                updateAnnotationsOnChart();
             }
         });
     }
@@ -1358,6 +1362,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (intervalSelector && interval) intervalSelector.value = interval;
         if (controlBar) controlBar.classList.remove('hidden');
 
+        // Set default Show Top to 5
+        if (topNInput) topNInput.value = 5;
+
         // Run analysis
         runAnalysis(data);
 
@@ -1368,7 +1375,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const chartCanvas = document.getElementById('stockChart');
         setupAnnotationInteraction(chartCanvas);
         if (typeof enableChartInteraction === 'function' && chart) {
-            enableChartInteraction(chart, chartCanvas);
+            enableChartInteraction(chart, chartCanvas, { onZoomChange: updateAnnotationsOnChart });
         }
         updateSROverlay();
         initLineUp();
