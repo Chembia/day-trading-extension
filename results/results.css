@@ -93,6 +93,12 @@ body {
     margin-left: auto;
 }
 
+.refresh-time-btn {
+    width: auto !important;
+    padding: 8px 20px !important;
+    font-size: 13px !important;
+}
+
 /* Main Content */
 .results-main {
     display: flex;

@@ -1,7 +1,9 @@
 // Range Selection Zoom and Mouse Wheel Zoom/Pan for Chart.js
 
-function enableChartInteraction(chart, canvas) {
+function enableChartInteraction(chart, canvas, options) {
     if (!canvas) return;
+
+    const onZoomChange = (options && typeof options.onZoomChange === 'function') ? options.onZoomChange : null;
 
     // ---- Shared state ----
     let isDragging = false;
@@ -93,6 +95,7 @@ function enableChartInteraction(chart, canvas) {
                         chart.options.scales.x.min = Math.max(-0.5, newMin);
                         chart.options.scales.x.max = newMax;
                         chart.update('none');
+                        if (onZoomChange) onZoomChange();
                     }
                 }
             }
@@ -106,6 +109,7 @@ function enableChartInteraction(chart, canvas) {
             panStartMin = null;
             panStartMax = null;
             canvas.style.cursor = '';
+            if (onZoomChange) onZoomChange();
         }
     });
 
@@ -148,6 +152,7 @@ function enableChartInteraction(chart, canvas) {
         chart.options.scales.x.min = Math.max(-0.5, newMin);
         chart.options.scales.x.max = newMax;
         chart.update('none');
+        if (onZoomChange) onZoomChange();
     }, { passive: false });
 }
 
