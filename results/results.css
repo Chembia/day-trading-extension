@@ -213,6 +213,7 @@ body {
     padding: 12px;
     cursor: pointer;
     transition: all 0.2s ease;
+    animation: fadeIn 0.3s ease-out both;
 }
 
 .pattern-item:hover,
@@ -507,6 +508,53 @@ body {
     border-color: rgba(208, 250, 249, 0.6);
 }
 
+/* Toggle Switch for Settings */
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 24px;
+    flex-shrink: 0;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(182, 182, 182, 0.4);
+    border-radius: 24px;
+    transition: background 0.2s ease;
+    border: 1px solid rgba(182, 182, 182, 0.3);
+}
+
+.toggle-slider::before {
+    content: '';
+    position: absolute;
+    height: 18px;
+    width: 18px;
+    left: 2px;
+    bottom: 2px;
+    background: white;
+    border-radius: 50%;
+    transition: transform 0.2s ease;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+}
+
+.toggle-switch input:checked + .toggle-slider {
+    background: linear-gradient(135deg, rgba(103, 232, 249, 0.9), rgba(56, 189, 248, 0.8));
+    border-color: rgba(103, 232, 249, 0.5);
+}
+
+.toggle-switch input:checked + .toggle-slider::before {
+    transform: translateX(20px);
+}
+
 /* Download Modal */
 .radio-group {
     display: flex;
@@ -626,7 +674,7 @@ body {
     background: rgba(30, 30, 30, 0.95);
 }
 
-[data-theme="dark"] .lineup-popup-toggle {
+[data-theme="dark"] .lineup-button {
     background: linear-gradient(135deg, rgba(44, 44, 44, 0.95), rgba(30, 30, 30, 0.9));
     border-color: rgba(255, 255, 255, 0.1);
     color: var(--text-primary);
@@ -1016,6 +1064,18 @@ body {
 .panel-section:nth-child(6) { animation-delay: 0.3s; }
 .panel-section:nth-child(7) { animation-delay: 0.35s; }
 
+/* Staggered fade-in for pattern items in sidebar */
+.pattern-item:nth-child(1)  { animation-delay: 0.05s; }
+.pattern-item:nth-child(2)  { animation-delay: 0.10s; }
+.pattern-item:nth-child(3)  { animation-delay: 0.15s; }
+.pattern-item:nth-child(4)  { animation-delay: 0.20s; }
+.pattern-item:nth-child(5)  { animation-delay: 0.25s; }
+.pattern-item:nth-child(6)  { animation-delay: 0.30s; }
+.pattern-item:nth-child(7)  { animation-delay: 0.35s; }
+.pattern-item:nth-child(8)  { animation-delay: 0.40s; }
+.pattern-item:nth-child(9)  { animation-delay: 0.45s; }
+.pattern-item:nth-child(10) { animation-delay: 0.50s; }
+
 /* Panel Resizer */
 .panel-resizer {
     position: absolute;
@@ -1042,7 +1102,7 @@ body {
 }
 
 /* Line-Up Popup */
-.lineup-popup-toggle {
+.lineup-button {
     position: fixed;
     bottom: 20px;
     left: 20px;
@@ -1050,8 +1110,8 @@ body {
     background: linear-gradient(135deg, rgba(208, 250, 249, 0.7), rgba(182, 182, 182, 0.4));
     border: 1px solid rgba(208, 250, 249, 0.4);
     border-radius: 50px;
-    padding: 14px 20px;
-    font-size: 14px;
+    padding: 12px 20px;
+    font-size: 13px;
     font-weight: normal;
     color: var(--text-primary);
     cursor: pointer;
@@ -1064,7 +1124,7 @@ body {
     white-space: nowrap;
 }
 
-.lineup-popup-toggle:hover {
+.lineup-button:hover {
     transform: scale(1.05);
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
 }
