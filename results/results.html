@@ -14,14 +14,14 @@
     <script src="../scripts/lib/chartjs-plugin-annotation.min.js"></script>
 </head>
 <body>
-    <!-- FLUEY brand in top-left corner -->
-    <div class="fluey-brand-overlay">FLUEY</div>
-
     <div id="resultsContainer" class="results-container">
         <header class="results-header glass-container">
-            <div class="header-content">
+            <div class="header-stock-info">
                 <h1 id="stockTitle">Loading...</h1>
                 <p id="dateRange" class="date-range"></p>
+            </div>
+            <div class="header-brand">
+                <span class="fluey-title">FLUEY</span>
             </div>
             <div class="header-actions">
                 <button id="newAnalysisBtn" class="glass-button">
@@ -92,7 +92,7 @@
                                 <span class="toggle-icon">◀</span>
                                 <span class="toggle-label">Patterns List</span>
                             </button>
-                            <h2>Candlestick Chart with Pattern Annotations</h2>
+                            <h2>Chart</h2>
                             <div class="chart-actions">
                                 <span class="chart-hint">Shift+drag: zoom • Ctrl+drag: pan • Scroll: zoom</span>
                                 <button id="reset-zoom-btn" class="glass-button glass-button-secondary chart-action-btn" title="Reset Zoom">

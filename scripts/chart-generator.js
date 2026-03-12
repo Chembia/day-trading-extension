@@ -119,6 +119,40 @@ function createPatternAnnotations(patterns, stockData) {
     const isDark = typeof document !== 'undefined' &&
         document.documentElement && document.documentElement.dataset.theme === 'dark';
     const labelColor = isDark ? '#FFFFFF' : '#2C2C2C';
+
+    // Build placement info for label stacking (overlap prevention)
+    const placements = patterns.map((pattern, idx) => {
+        const startIdx = Math.max(0, pattern.index - pattern.candles + 1);
+        const endIdx = pattern.index;
+        return { idx, startIdx, endIdx, yAdjust: -15 };
+    });
+
+    // Sort by startIdx for consistent stacking assignment
+    placements.sort((a, b) => a.startIdx - b.startIdx);
+
+    // Assign non-overlapping yAdjust values using a lane-based approach
+    const LABEL_STEP = 18; // pixels between stacked label rows
+    const BASE_ADJUST = -15;
+    for (let i = 0; i < placements.length; i++) {
+        const curr = placements[i];
+        const occupiedOffsets = new Set();
+        for (let j = 0; j < i; j++) {
+            const prev = placements[j];
+            // Check x-range overlap (or direct adjacency - 1 candle buffer to prevent near-overlap)
+            if (curr.startIdx <= prev.endIdx + 1 && prev.startIdx <= curr.endIdx + 1) {
+                occupiedOffsets.add(prev.yAdjust);
+            }
+        }
+        // Find first available vertical slot
+        let yAdjust = BASE_ADJUST;
+        while (occupiedOffsets.has(yAdjust)) {
+            yAdjust -= LABEL_STEP;
+        }
+        curr.yAdjust = yAdjust;
+    }
+
+    // Build lookup from original pattern index to yAdjust
+    const yAdjustMap = new Map(placements.map(p => [p.idx, p.yAdjust]));
     
     patterns.forEach((pattern, idx) => {
         const startIdx = Math.max(0, pattern.index - pattern.candles + 1);
@@ -168,7 +202,7 @@ function createPatternAnnotations(patterns, stockData) {
                 display: true,
                 content: pattern.patternName,
                 position: 'start',
-                yAdjust: -20,
+                yAdjust: yAdjustMap.get(idx) ?? -15,
                 backgroundColor: borderColor,
                 color: labelColor,
                 font: {
