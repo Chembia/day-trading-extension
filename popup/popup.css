@@ -5,6 +5,7 @@ body {
     min-height: 500px;
     margin: 0;
     padding: 0;
+    background-color: #D0FAF9;
     background-image: url('../assets/fluey_light-mode_background.jpg');
     background-size: 110% 110%;
     background-position: 0% 0%;
@@ -17,6 +18,7 @@ body {
 }
 
 [data-theme="dark"] body {
+    background-color: #1a2a2a;
     background-image: url('../assets/fluey_dark-mode_background.jpg');
     background-size: 110% 110%;
     background-position: 0% 0%;

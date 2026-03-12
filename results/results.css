@@ -4,6 +4,7 @@ body {
     min-height: 100vh;
     padding: 20px;
     transition: none;
+    background-color: #D0FAF9;
     background-image: url('../assets/fluey_light-mode_background.jpg');
     background-size: 110% 110%;
     background-position: 0% 0%;
@@ -15,26 +16,6 @@ body {
     100% { background-position: 100% 100%; }
 }
 
-/* FLUEY brand overlay in top-left corner */
-.fluey-brand-overlay {
-    position: fixed;
-    top: 16px;
-    left: 20px;
-    font-family: 'Chewy', cursive;
-    font-size: 32px;
-    letter-spacing: 3px;
-    color: rgba(255, 255, 255, 0.85);
-    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-    z-index: 500;
-    pointer-events: none;
-    user-select: none;
-}
-
-[data-theme="dark"] .fluey-brand-overlay {
-    color: rgba(255, 255, 255, 0.75);
-    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
-}
-
 .results-container {
     max-width: 1800px;
     margin: 0 auto;
@@ -42,40 +23,58 @@ body {
 
 /* Header */
 .results-header {
-    display: flex;
-    justify-content: space-between;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
     align-items: center;
     margin-bottom: 20px;
     padding: 16px 24px;
     gap: 16px;
 }
 
-.header-left {
-    flex-shrink: 0;
+/* Stock info - top left, indented, left-aligned */
+.header-stock-info {
+    text-align: left;
+    padding-left: 8px;
 }
 
-.header-content {
-    flex: 1;
-    text-align: center;
-}
-
-.header-content h1 {
-    font-size: 24px;
+.header-stock-info h1 {
+    font-size: 22px;
     font-weight: 700;
     color: var(--text-primary);
-    margin: 0 0 4px 0;
+    margin: 0 0 2px 0;
 }
 
 .date-range {
     color: var(--text-secondary);
     font-size: 13px;
     margin: 0;
+    text-align: left;
+}
+
+/* FLUEY title - centered in header */
+.header-brand {
+    text-align: center;
+}
+
+.fluey-title {
+    font-family: 'Chewy', cursive;
+    font-size: 38px;
+    font-weight: 400;
+    letter-spacing: 4px;
+    color: var(--text-primary);
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+[data-theme="dark"] .fluey-title {
+    color: var(--text-primary);
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
 }
 
 .header-actions {
     display: flex;
     gap: 8px;
     flex-shrink: 0;
+    justify-content: flex-end;
 }
 
 .header-actions .glass-button {
@@ -604,8 +603,10 @@ body {
 
 /* Dark Mode */
 [data-theme="dark"] body {
+    background-color: #1a2a2a;
     background-image: url('../assets/fluey_dark-mode_background.jpg');
     background-size: 110% 110%;
+    background-position: 0% 0%;
     animation: bgPan 20s ease-in-out infinite alternate;
     color: var(--text-primary);
 }
@@ -717,14 +718,16 @@ body {
     }
     
     .results-header {
-        flex-wrap: wrap;
+        grid-template-columns: 1fr;
         padding: 16px;
         gap: 8px;
     }
 
-    .header-content {
+    .header-brand {
         order: -1;
-        width: 100%;
+    }
+
+    .header-stock-info {
         text-align: left;
     }
     
