@@ -17,12 +17,26 @@ body {
     100% { background-position: 100% 100%; }
 }
 
+@keyframes darkNavyGradient {
+    0% { background-position: 0% 0%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 100%; }
+}
+
 [data-theme="dark"] body {
-    background-color: #1a2a2a;
-    background-image: url('../assets/fluey_dark-mode_background.jpg');
-    background-size: 110% 110%;
+    background-color: #0a1628;
+    background-image: linear-gradient(
+        135deg,
+        #0a1628 0%,
+        #0d2137 20%,
+        #0f3460 40%,
+        #1a3a5c 60%,
+        #0d2137 80%,
+        #0a1628 100%
+    );
+    background-size: 300% 300%;
     background-position: 0% 0%;
-    animation: bgPan 20s ease-in-out infinite alternate;
+    animation: darkNavyGradient 20s ease-in-out infinite alternate;
 }
 
 .popup-container {
