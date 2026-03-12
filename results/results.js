@@ -5,6 +5,7 @@ const DEFAULT_ZOOM_BUFFER = 5;
 const MAX_PATTERN_DISPLAY = 999;
 const MIN_PANEL_WIDTH = 200;
 const MAX_PANEL_WIDTH = 500;
+const PANEL_ANIMATION_DURATION = 400; // ms — must match CSS transition duration in results.css
 
 document.addEventListener('DOMContentLoaded', async () => {
     // DOM Elements
@@ -23,6 +24,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Sidebar
     const patternsListToggle = document.getElementById('patterns-list-toggle');
+
+    // Right panel toggle
+    const rightPanelToggle = document.getElementById('right-panel-toggle');
 
     // Filter elements (now in right panel)
     const patternTypeFilter = document.getElementById('pattern-type-filter');
@@ -587,7 +591,37 @@ document.addEventListener('DOMContentLoaded', async () => {
                     chart.resize();
                     chart.update('none');
                 }
-            }, 400);
+            }, PANEL_ANIMATION_DURATION);
+        });
+    }
+
+    // ---- Right Panel Toggle ----
+    function updateRightPanelToggleIcon(hidden) {
+        if (rightPanelToggle) {
+            const icon = rightPanelToggle.querySelector('.toggle-icon');
+            if (icon) icon.textContent = hidden ? '◀' : '▶';
+        }
+    }
+
+    if (rightPanelToggle) {
+        rightPanelToggle.addEventListener('click', () => {
+            const layout = document.querySelector('.results-layout');
+            if (!layout) return;
+            const rightPanelEl = document.querySelector('.right-panel');
+            const isHidden = layout.classList.toggle('right-panel-hidden');
+            // Clear any inline width set by the resizer so CSS transition can take over
+            if (isHidden && rightPanelEl) {
+                rightPanelEl.style.width = '';
+                rightPanelEl.style.minWidth = '';
+            }
+            updateRightPanelToggleIcon(isHidden);
+            // Trigger chart resize after right panel animation
+            setTimeout(() => {
+                if (chart) {
+                    chart.resize();
+                    chart.update('none');
+                }
+            }, PANEL_ANIMATION_DURATION);
         });
     }
 

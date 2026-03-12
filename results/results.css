@@ -4,7 +4,7 @@ body {
     min-height: 100vh;
     padding: 20px;
     transition: none;
-    background-color: #D0FAF9;
+    background-color: #7cc6ef;
     background-image: url('../assets/fluey_light-mode_background.jpg');
     background-size: 110% 110%;
     background-position: 0% 0%;
@@ -173,6 +173,17 @@ body {
     /* flex layout handles this automatically */
 }
 
+/* Right panel hidden state */
+.right-panel-hidden .right-panel {
+    width: 0;
+    min-width: 0;
+    opacity: 0;
+    overflow: hidden;
+    padding: 0;
+    margin: 0;
+    pointer-events: none;
+}
+
 /* Main Content (center) */
 .main-content {
     flex: 1;
@@ -180,6 +191,29 @@ body {
     display: flex;
     flex-direction: column;
     gap: 20px;
+    container-type: inline-size;
+    container-name: chart-container;
+}
+
+/* Hide chart hint text when chart area is narrow (right panel extended) */
+@container chart-container (max-width: 550px) {
+    .chart-hint {
+        display: none;
+    }
+}
+
+/* Stack chart actions when very narrow */
+@container chart-container (max-width: 380px) {
+    .chart-section-header {
+        display: flex;
+        flex-wrap: wrap;
+        row-gap: 8px;
+    }
+    .chart-actions {
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        width: 100%;
+    }
 }
 
 .sidebar-header {
@@ -219,7 +253,7 @@ body {
 }
 
 .pattern-item {
-    background: rgba(208, 250, 249, 0.08);
+    background: rgba(124, 198, 239, 0.08);
     border: 1px solid rgba(182, 182, 182, 0.2);
     border-radius: 10px;
     padding: 12px;
@@ -386,8 +420,8 @@ body {
     bottom: 20px;
     right: 20px;
     z-index: 1000;
-    background: linear-gradient(135deg, rgba(208, 250, 249, 0.7), rgba(182, 182, 182, 0.4));
-    border: 1px solid rgba(208, 250, 249, 0.4);
+    background: linear-gradient(135deg, rgba(124, 198, 239, 0.7), rgba(182, 182, 182, 0.4));
+    border: 1px solid rgba(124, 198, 239, 0.4);
     border-radius: 50%;
     width: 60px;
     height: 60px;
@@ -450,9 +484,9 @@ body {
 .help-panel .glass-button {
     margin-top: 8px;
     width: 100%;
-    background: linear-gradient(135deg, rgba(208, 250, 249, 0.8), rgba(182, 182, 182, 0.5));
+    background: linear-gradient(135deg, rgba(124, 198, 239, 0.8), rgba(182, 182, 182, 0.5));
     color: #1a1a2e;
-    border: 1px solid rgba(208, 250, 249, 0.4);
+    border: 1px solid rgba(124, 198, 239, 0.4);
 }
 
 /* Help Panel Dark Mode */
@@ -537,12 +571,12 @@ body {
 }
 
 .theme-option:hover {
-    background: rgba(208, 250, 249, 0.3);
+    background: rgba(124, 198, 239, 0.3);
 }
 
 .theme-option.active {
-    background: linear-gradient(135deg, rgba(208, 250, 249, 0.7), rgba(182, 182, 182, 0.4));
-    border-color: rgba(208, 250, 249, 0.6);
+    background: linear-gradient(135deg, rgba(124, 198, 239, 0.7), rgba(182, 182, 182, 0.4));
+    border-color: rgba(124, 198, 239, 0.6);
 }
 
 /* Toggle Switch for Settings */
@@ -946,12 +980,12 @@ body {
 }
 
 .annotation-tool-btn:hover {
-    background: rgba(208, 250, 249, 0.4);
-    border-color: rgba(208, 250, 249, 0.6);
+    background: rgba(124, 198, 239, 0.4);
+    border-color: rgba(124, 198, 239, 0.6);
 }
 
 .annotation-tool-btn.active {
-    background: rgba(208, 250, 249, 0.7);
+    background: rgba(124, 198, 239, 0.7);
     border-color: rgba(100, 200, 200, 0.7);
     color: #1a6a6a;
     font-weight: bold;
@@ -1077,7 +1111,7 @@ body {
     align-items: center;
     gap: 10px;
     padding: 8px 10px;
-    background: rgba(208, 250, 249, 0.1);
+    background: rgba(124, 198, 239, 0.1);
     border: 1.5px solid rgba(182, 182, 182, 0.2);
     border-radius: 8px;
     cursor: pointer;
@@ -1086,8 +1120,8 @@ body {
 }
 
 .cluster-checkbox-label:hover {
-    background: rgba(208, 250, 249, 0.3);
-    border-color: rgba(208, 250, 249, 0.5);
+    background: rgba(124, 198, 239, 0.3);
+    border-color: rgba(124, 198, 239, 0.5);
     transform: translateX(2px);
 }
 
@@ -1111,8 +1145,8 @@ body {
 }
 
 [data-theme="dark"] .cluster-checkbox-label:hover {
-    background: rgba(208, 250, 249, 0.15);
-    border-color: rgba(208, 250, 249, 0.3);
+    background: rgba(124, 198, 239, 0.15);
+    border-color: rgba(124, 198, 239, 0.3);
 }
 
 /* Animations */
@@ -1155,7 +1189,7 @@ body {
 
 .panel-resizer:hover, .panel-resizer:active {
     opacity: 1;
-    background: rgba(208, 250, 249, 0.5);
+    background: rgba(124, 198, 239, 0.5);
 }
 
 .panel-resizer-right {
@@ -1172,8 +1206,8 @@ body {
     bottom: 20px;
     left: 20px;
     z-index: 1000;
-    background: linear-gradient(135deg, rgba(208, 250, 249, 0.7), rgba(182, 182, 182, 0.4));
-    border: 1px solid rgba(208, 250, 249, 0.4);
+    background: linear-gradient(135deg, rgba(124, 198, 239, 0.7), rgba(182, 182, 182, 0.4));
+    border: 1px solid rgba(124, 198, 239, 0.4);
     border-radius: 50px;
     padding: 12px 20px;
     font-size: 13px;
@@ -1292,7 +1326,7 @@ body {
 }
 
 .snapshot-actions button:hover {
-    background: rgba(208, 250, 249, 0.3);
+    background: rgba(124, 198, 239, 0.3);
 }
 
 /* Toast */
@@ -1330,7 +1364,7 @@ body {
 }
 
 .chart-toggle-btn:hover {
-    background: rgba(208, 250, 249, 0.95);
+    background: rgba(124, 198, 239, 0.95);
     border-color: var(--accent-aqua, #67e8f9);
     box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
 }
@@ -1363,8 +1397,8 @@ body {
 /* Range Zoom Selection Box */
 .zoom-selection-box {
     position: absolute;
-    border: 2px dashed rgba(208, 250, 249, 0.8);
-    background: rgba(208, 250, 249, 0.15);
+    border: 2px dashed rgba(124, 198, 239, 0.8);
+    background: rgba(124, 198, 239, 0.15);
     pointer-events: none;
     z-index: 1000;
     border-radius: 2px;

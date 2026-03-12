@@ -3,7 +3,7 @@
 :root {
     --base-glass: rgba(0, 0, 0, 0.1);
     --highlight-gray: #B6B6B6;
-    --accent-aqua: #D0FAF9;
+    --accent-aqua: #7cc6ef;
     --accent-milky: #FFFFF3;
     --text-primary: #2C2C2C;
     --text-secondary: #6B6B6B;
@@ -49,7 +49,7 @@ body {
 
 /* Glass Input Fields */
 .glass-input {
-    background: rgba(208, 250, 249, 0.15);
+    background: rgba(124, 198, 239, 0.15);
     backdrop-filter: blur(10px);
     border: 1.5px solid rgba(182, 182, 182, 0.3);
     border-radius: 10px;
@@ -61,10 +61,10 @@ body {
 }
 
 .glass-input:focus {
-    border-color: rgba(208, 250, 249, 0.6);
-    background: rgba(208, 250, 249, 0.25);
+    border-color: rgba(124, 198, 239, 0.6);
+    background: rgba(124, 198, 239, 0.25);
     outline: none;
-    box-shadow: 0 0 0 3px rgba(208, 250, 249, 0.15);
+    box-shadow: 0 0 0 3px rgba(124, 198, 239, 0.15);
 }
 
 .glass-input::placeholder {
@@ -73,7 +73,7 @@ body {
 
 /* Glass Button */
 .glass-button {
-    background: linear-gradient(135deg, rgba(208, 250, 249, 0.5), rgba(182, 182, 182, 0.3));
+    background: linear-gradient(135deg, rgba(124, 198, 239, 0.5), rgba(182, 182, 182, 0.3));
     backdrop-filter: blur(12px);
     border: 1px solid rgba(182, 182, 182, 0.3);
     color: var(--text-primary);
@@ -90,7 +90,7 @@ body {
 }
 
 .glass-button:hover {
-    background: linear-gradient(135deg, rgba(208, 250, 249, 0.7), rgba(182, 182, 182, 0.4));
+    background: linear-gradient(135deg, rgba(124, 198, 239, 0.7), rgba(182, 182, 182, 0.4));
     transform: translateY(-2px);
     box-shadow: 
         0 6px 24px rgba(0, 0, 0, 0.12),
@@ -133,14 +133,14 @@ body {
 
 /* Loading Spinner */
 .spinner {
-    border: 3px solid rgba(208, 250, 249, 0.3);
+    border: 3px solid rgba(124, 198, 239, 0.3);
     border-top: 3px solid var(--accent-aqua);
     border-radius: 50%;
     width: 40px;
     height: 40px;
     animation: spin 1s linear infinite;
     margin: 20px auto;
-    box-shadow: 0 0 10px rgba(208, 250, 249, 0.3);
+    box-shadow: 0 0 10px rgba(124, 198, 239, 0.3);
 }
 
 @keyframes spin {
