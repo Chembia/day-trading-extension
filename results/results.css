@@ -58,7 +58,7 @@ body {
 
 .fluey-title {
     font-family: 'Chewy', cursive;
-    font-size: 38px;
+    font-size: 56px;
     font-weight: 400;
     letter-spacing: 4px;
     color: var(--text-primary);
@@ -455,6 +455,31 @@ body {
     border: 1px solid rgba(208, 250, 249, 0.4);
 }
 
+/* Help Panel Dark Mode */
+[data-theme="dark"] .help-panel {
+    background: rgba(10, 22, 40, 0.97);
+    color: var(--text-primary);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .help-panel h3 {
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .help-section h4 {
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .help-section p {
+    color: rgba(255, 255, 255, 0.82);
+}
+
+[data-theme="dark"] .help-panel .glass-button {
+    background: linear-gradient(135deg, rgba(13, 33, 55, 0.9), rgba(15, 52, 96, 0.7));
+    color: var(--text-primary);
+    border-color: rgba(255, 255, 255, 0.15);
+}
+
 /* Error Container */
 #errorContainer {
     text-align: center;
@@ -603,12 +628,26 @@ body {
 
 /* Dark Mode */
 [data-theme="dark"] body {
-    background-color: #1a2a2a;
-    background-image: url('../assets/fluey_dark-mode_background.jpg');
-    background-size: 110% 110%;
+    background-color: #0a1628;
+    background-image: linear-gradient(
+        135deg,
+        #0a1628 0%,
+        #0d2137 20%,
+        #0f3460 40%,
+        #1a3a5c 60%,
+        #0d2137 80%,
+        #0a1628 100%
+    );
+    background-size: 300% 300%;
     background-position: 0% 0%;
-    animation: bgPan 20s ease-in-out infinite alternate;
+    animation: darkNavyGradient 20s ease-in-out infinite alternate;
     color: var(--text-primary);
+}
+
+@keyframes darkNavyGradient {
+    0% { background-position: 0% 0%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 100%; }
 }
 
 [data-theme="dark"] h1,
