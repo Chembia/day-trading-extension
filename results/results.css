@@ -2,23 +2,30 @@
 
 body {
     min-height: 100vh;
-    padding: 20px;
+    padding: 0;
     transition: none;
-    background-color: #c8a97a;
-    background-image: linear-gradient(135deg, #f5ece0 0%, #e8d5b7 25%, #d4b896 55%, #c4a070 80%, #b8965a 100%);
-    background-size: 200% 200%;
-    background-position: 0% 0%;
-    animation: bgPan 20s ease-in-out infinite alternate;
+    background-color: #f0f1e6;
+    background-image: none;
+    overflow-x: hidden;
 }
 
-@keyframes bgPan {
-    0% { background-position: 0% 0%; }
-    100% { background-position: 100% 100%; }
-}
-
+/* Top-level flex row: sidebar | main-area */
 .results-container {
-    max-width: 1800px;
-    margin: 0 auto;
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    min-height: 100vh;
+    width: 100%;
+}
+
+/* Main area to the right of the always-visible sidebar */
+.results-main-area {
+    flex: 1;
+    min-width: 0;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    overflow-x: hidden;
 }
 
 /* Header */
@@ -226,6 +233,7 @@ body {
     display: flex;
     flex-direction: column;
     gap: 0;
+    flex: 1;
 }
 
 /* Results Layout: Flexbox for proper panel pushing */
@@ -236,20 +244,23 @@ body {
     width: 100%;
 }
 
-/* Sidebar */
+/* Sidebar — always visible, full viewport height, resizable width */
 .sidebar {
     width: 280px;
-    min-width: 200px;
+    min-width: 180px;
     max-width: 600px;
     flex-shrink: 0;
+    height: 100vh;
+    position: sticky;
+    top: 0;
     padding: 16px;
-    overflow: hidden;
-    max-height: calc(100vh - 140px);
+    overflow-y: auto;
+    overflow-x: hidden;
     display: flex;
     flex-direction: column;
-    position: sticky;
-    top: 20px;
-    transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), padding 0.4s cubic-bezier(0.4, 0, 0.2, 1), min-width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 0 !important;
+    /* Full-height panel: flush left/top/bottom edges */
+    margin: 0 !important;
 }
 
 /* Scrollable filter content within sidebar */
@@ -273,37 +284,7 @@ body {
     border-radius: 2px;
 }
 
-/* Sidebar hidden state → thin vertical line */
-.sidebar-hidden .sidebar {
-    width: 8px;
-    min-width: 8px;
-    opacity: 0.6;
-    overflow: hidden;
-    padding: 0;
-    margin: 0;
-    cursor: ew-resize;
-    background: rgba(196, 168, 130, 0.4) !important;
-    backdrop-filter: blur(8px);
-    border-radius: 6px;
-    pointer-events: auto;
-}
-
-.sidebar-hidden .sidebar:hover {
-    opacity: 1;
-    background: rgba(196, 168, 130, 0.65) !important;
-}
-
-[data-theme="dark"] .sidebar-hidden .sidebar {
-    background: rgba(100, 150, 220, 0.28) !important;
-}
-
-[data-theme="dark"] .sidebar-hidden .sidebar:hover {
-    background: rgba(100, 150, 220, 0.5) !important;
-}
-
-.sidebar-hidden .results-layout {
-    /* flex layout handles this automatically */
-}
+/* Sidebar is always visible — no collapsed/hidden state */
 
 /* Right panel hidden state → fully hidden (expand button shows inside chart) */
 .right-panel-hidden .right-panel {
@@ -529,9 +510,9 @@ body {
 }
 
 .chart-section-header {
-    display: grid;
-    grid-template-columns: auto 1fr auto;
+    display: flex;
     align-items: center;
+    justify-content: space-between;
     margin-bottom: 20px;
     gap: 12px;
 }
@@ -822,31 +803,31 @@ body {
     color: #2C2C2C;
 }
 
-/* Light mode: beige-tinted glass containers (override common.css blue tones) */
+/* Light mode: cream-tinted glass containers (reflect #f0f1e6 background) */
 [data-theme="light"] .glass-container {
-    background: rgba(255, 248, 225, 0.5);
-    border-color: rgba(255, 250, 235, 0.65);
-    box-shadow: 0 8px 32px rgba(120, 80, 30, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    background: rgba(248, 249, 238, 0.58);
+    border-color: rgba(210, 212, 195, 0.55);
+    box-shadow: 0 8px 32px rgba(80, 85, 50, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.65);
 }
 
-/* Light mode: beige-tinted inputs */
+/* Light mode: cream-tinted inputs */
 [data-theme="light"] .glass-input {
-    background: rgba(255, 245, 210, 0.35);
-    border-color: rgba(180, 140, 80, 0.3);
+    background: rgba(250, 251, 240, 0.45);
+    border-color: rgba(180, 182, 158, 0.4);
 }
 
 [data-theme="light"] .glass-input:focus {
-    border-color: rgba(180, 140, 80, 0.55);
-    background: rgba(255, 245, 200, 0.5);
-    box-shadow: 0 0 0 3px rgba(180, 140, 80, 0.15);
+    border-color: rgba(150, 155, 120, 0.65);
+    background: rgba(250, 251, 235, 0.6);
+    box-shadow: 0 0 0 3px rgba(150, 155, 120, 0.18);
 }
 
-/* Light mode: right panel warm glass */
+/* Light mode: right panel warm cream glass */
 [data-theme="light"] .right-panel {
-    background: rgba(255, 248, 225, 0.5) !important;
-    border-color: rgba(255, 250, 235, 0.65) !important;
-    box-shadow: 0 8px 32px rgba(120, 80, 30, 0.12),
-                inset 0 1px 0 rgba(255, 255, 255, 0.6) !important;
+    background: rgba(248, 249, 238, 0.58) !important;
+    border-color: rgba(210, 212, 195, 0.55) !important;
+    box-shadow: 0 8px 32px rgba(80, 85, 50, 0.12),
+                inset 0 1px 0 rgba(255, 255, 255, 0.65) !important;
 }
 
 /* Light mode: panel hover/active accent to warm tone */
@@ -1005,7 +986,10 @@ body {
 
 /* Responsive Design */
 @media (max-width: 1200px) {
-    .sidebar,
+    .sidebar {
+        width: 240px;
+        min-width: 180px;
+    }
     .right-panel {
         width: 240px;
         min-width: 200px;
@@ -1013,12 +997,27 @@ body {
 }
 
 @media (max-width: 900px) {
+    /* On small viewports, stack sidebar above main content */
+    .results-container {
+        flex-direction: column;
+    }
+
+    .sidebar {
+        width: 100% !important;
+        min-width: unset;
+        max-width: unset;
+        height: auto;
+        position: static;
+        max-height: 350px;
+        overflow-y: auto;
+        border-radius: 0 !important;
+    }
+
     .results-layout {
         flex-direction: column;
         align-items: stretch;
     }
 
-    .sidebar,
     .right-panel {
         width: 100%;
         min-width: unset;
@@ -1029,37 +1028,14 @@ body {
 }
 
 @media (max-width: 768px) {
-    body {
+    .results-main-area {
         padding: 12px;
     }
-    
-    .results-header {
-        grid-template-columns: 1fr;
-        padding: 16px;
-        gap: 8px;
-    }
 
-    .header-brand {
-        order: -1;
-    }
-
-    .header-stock-info {
-        text-align: left;
-    }
-    
-    .header-actions {
-        width: 100%;
-        flex-wrap: wrap;
-    }
-    
-    .header-actions .glass-button {
-        flex: 1;
-    }
-    
     .chart-section {
         padding: 16px;
     }
-    
+
     .chart-wrapper {
         height: 350px;
     }

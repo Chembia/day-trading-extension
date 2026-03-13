@@ -15,208 +15,206 @@
 </head>
 <body>
     <div id="resultsContainer" class="results-container">
-        <!-- Hidden elements for JS compatibility -->
-        <h1 id="stockTitle" class="hidden"></h1>
-        <p id="dateRange" class="date-range hidden"></p>
-
-        <!-- Control Pill (full-width stretched) -->
-        <div id="controlBar" class="control-bar glass-container hidden">
-            <div class="control-group">
-                <label for="stock-input">Symbol:</label>
-                <input type="text" id="stock-input" class="glass-input control-input" placeholder="e.g. AAPL" maxlength="10">
+        <!-- Left Sidebar — always visible, full viewport height, resizable width -->
+        <aside class="sidebar glass-container" id="filterPanel">
+            <!-- Logo at top of sidebar -->
+            <div class="sidebar-logo">
+                <span class="fluey-title">fluey</span>
             </div>
-            <div class="control-group">
-                <label for="start-time-control">Start:</label>
-                <input type="datetime-local" id="start-time-control" class="glass-input control-input">
+
+            <div class="sidebar-header">
+                <h3>Filters</h3>
             </div>
-            <div class="control-group">
-                <label for="end-time-control">End:</label>
-                <input type="datetime-local" id="end-time-control" class="glass-input control-input">
-            </div>
-            <div class="control-group">
-                <label for="interval-selector">Interval:</label>
-                <select id="interval-selector" class="glass-input control-input">
-                    <option value="1min">1 Minute</option>
-                    <option value="5min">5 Minutes</option>
-                    <option value="15min">15 Minutes</option>
-                    <option value="30min">30 Minutes</option>
-                    <option value="45min">45 Minutes</option>
-                    <option value="1h">1 Hour</option>
-                    <option value="2h">2 Hours</option>
-                    <option value="4h">4 Hours</option>
-                    <option value="1day" selected>1 Day</option>
-                    <option value="1week">1 Week</option>
-                    <option value="1month">1 Month</option>
-                </select>
-            </div>
-        </div>
 
-        <!-- Action Buttons Row (under pill) -->
-        <div id="actionRow" class="action-row hidden">
-            <div class="action-left">
-                <button id="refresh-time-btn" class="glass-button action-btn">
-                    ⏱️ Refresh Time
-                </button>
-                <button id="newAnalysisBtn" class="glass-button action-btn">
-                    New Analysis
-                </button>
-            </div>
-            <div class="action-right">
-                <button id="reanalyze-btn" class="glass-button action-btn">
-                    🔄 Re-Analyze
-                </button>
-            </div>
-        </div>
-        
-        <main class="results-main">
-            <!-- Results Layout: Filter Panel (left) + Main Content (center) + Patterns Panel (right) -->
-            <div class="results-layout">
-                <!-- Left Filter Panel (collapsible to thin line) -->
-                <aside class="sidebar glass-container" id="filterPanel">
-                    <!-- Logo at top of sidebar -->
-                    <div class="sidebar-logo">
-                        <span class="fluey-title">fluey</span>
-                    </div>
-
-                    <div class="sidebar-header">
-                        <h3>Filters</h3>
-                        <button id="patterns-list-toggle" class="panel-collapse-btn" title="Collapse Filter Panel">◀</button>
-                    </div>
-
-                    <!-- Scrollable filter content -->
-                    <div class="sidebar-scroll-content">
-                        <div class="panel-section">
-                            <h3>Filter</h3>
-                            <select id="pattern-type-filter" class="glass-input filter-input">
-                                <option value="all">All Patterns</option>
-                                <option value="none">Chart Only (No Patterns)</option>
-                                <option value="bullish">Bullish</option>
-                                <option value="bearish">Bearish</option>
-                                <option value="neutral">Neutral</option>
-                            </select>
-                        </div>
-
-                        <div class="panel-section">
-                            <h3>Show Top</h3>
-                            <div class="show-top-controls">
-                                <input type="number" id="top-n-input" class="glass-input" value="5" min="1" max="999">
-                                <button id="show-all-btn" class="glass-button glass-button-secondary show-all-btn">All</button>
-                            </div>
-                        </div>
-
-                        <div class="panel-section">
-                            <h3>Show Pattern Clusters Of</h3>
-                            <div class="cluster-filter">
-                                <label class="cluster-checkbox-label">
-                                    <input type="checkbox" value="2" class="cluster-checkbox" checked>
-                                    <span>2 Candles</span>
-                                </label>
-                                <label class="cluster-checkbox-label">
-                                    <input type="checkbox" value="3" class="cluster-checkbox" checked>
-                                    <span>3 Candles</span>
-                                </label>
-                                <label class="cluster-checkbox-label">
-                                    <input type="checkbox" value="4" class="cluster-checkbox" checked>
-                                    <span>4 Candles</span>
-                                </label>
-                                <label class="cluster-checkbox-label">
-                                    <input type="checkbox" value="5" class="cluster-checkbox" checked>
-                                    <span>5+ Candles</span>
-                                </label>
-                            </div>
-                        </div>
-
-                        <div class="panel-section">
-                            <h3>Support &amp; Resistance</h3>
-                            <div class="sr-header">
-                                <span class="sr-info-icon" title="Support is where price tends to stop falling. Resistance is where price tends to stop rising." role="tooltip">ⓘ</span>
-                            </div>
-                            <label class="sr-checkbox-label">
-                                <input type="checkbox" id="sr-show-levels" checked>
-                                Show Levels
-                            </label>
-                            <div class="sr-slider-group">
-                                <label for="sr-sensitivity">Sensitivity: <span id="sr-sensitivity-value">5</span></label>
-                                <input type="range" id="sr-sensitivity" min="1" max="10" value="5" class="sr-slider">
-                            </div>
-                            <div class="sr-slider-group">
-                                <label for="sr-min-strength">Min Strength: <span id="sr-min-strength-value">3</span></label>
-                                <input type="range" id="sr-min-strength" min="1" max="10" value="3" class="sr-slider">
-                            </div>
-                        </div>
-                    </div><!-- end sidebar-scroll-content -->
-
-                    <!-- Settings gear at bottom-left of sidebar (always visible) -->
-                    <div class="sidebar-footer">
-                        <button id="settingsBtn" class="glass-button glass-button-secondary settings-bottom-btn" title="Settings">⚙️ Settings</button>
-                    </div>
-                </aside>
-
-                <!-- Main Content (center) -->
-                <div class="main-content">
-                    <!-- Chart Section -->
-                    <section class="chart-section glass-container">
-                        <div class="chart-section-header">
-                            <button id="filter-panel-expand" class="chart-toggle-btn filter-expand-btn hidden" title="Expand Filter Panel">
-                                <span class="toggle-icon">▶</span>
-                                <span class="toggle-label">Filters</span>
-                            </button>
-                            <h2>Chart</h2>
-                            <div class="chart-actions">
-                                <span class="chart-hint">Shift+drag: zoom • Ctrl+drag: pan • Scroll: zoom</span>
-                                <button id="reset-zoom-btn" class="glass-button glass-button-secondary chart-action-btn" title="Reset Zoom">
-                                    🔍 Reset
-                                </button>
-                                <button id="downloadBtn" class="glass-button glass-button-secondary chart-action-btn">
-                                    ⬇️ Download
-                                </button>
-                            </div>
-                        </div>
-                        <div class="chart-wrapper">
-                            <div id="annotation-toolbar-container" class="annotation-toolbar-container"></div>
-                            <canvas id="stockChart"></canvas>
-                            <!-- Right panel expand button (visible when patterns panel is collapsed) -->
-                            <button id="right-panel-expand-btn" class="patterns-expand-btn hidden" title="Expand Patterns List">
-                                Patterns ◀
-                            </button>
-                        </div>
-                    </section>
+            <!-- Scrollable filter content -->
+            <div class="sidebar-scroll-content">
+                <div class="panel-section">
+                    <h3>Filter</h3>
+                    <select id="pattern-type-filter" class="glass-input filter-input">
+                        <option value="all">All Patterns</option>
+                        <option value="none">Chart Only (No Patterns)</option>
+                        <option value="bullish">Bullish</option>
+                        <option value="bearish">Bearish</option>
+                        <option value="neutral">Neutral</option>
+                    </select>
                 </div>
 
-                <!-- Right Patterns Panel (collapsible – chart expand button shows in chart-wrapper) -->
-                <aside class="right-panel glass-container" id="patternsPanel">
-                    <div class="sidebar-header">
-                        <h3>Detected Patterns (<span id="pattern-count">0</span>)</h3>
-                        <button id="right-panel-toggle" class="panel-collapse-btn" title="Collapse Patterns Panel">▶</button>
+                <div class="panel-section">
+                    <h3>Show Top</h3>
+                    <div class="show-top-controls">
+                        <input type="number" id="top-n-input" class="glass-input" value="5" min="1" max="999">
+                        <button id="show-all-btn" class="glass-button glass-button-secondary show-all-btn">All</button>
                     </div>
-                    <p id="pattern-count-display" class="pattern-count-label">0 patterns found</p>
-                    <!-- Pattern List -->
-                    <div id="sidebar-pattern-list" class="sidebar-pattern-list">
-                        <!-- Populated by JS -->
+                </div>
+
+                <div class="panel-section">
+                    <h3>Show Pattern Clusters Of</h3>
+                    <div class="cluster-filter">
+                        <label class="cluster-checkbox-label">
+                            <input type="checkbox" value="2" class="cluster-checkbox" checked>
+                            <span>2 Candles</span>
+                        </label>
+                        <label class="cluster-checkbox-label">
+                            <input type="checkbox" value="3" class="cluster-checkbox" checked>
+                            <span>3 Candles</span>
+                        </label>
+                        <label class="cluster-checkbox-label">
+                            <input type="checkbox" value="4" class="cluster-checkbox" checked>
+                            <span>4 Candles</span>
+                        </label>
+                        <label class="cluster-checkbox-label">
+                            <input type="checkbox" value="5" class="cluster-checkbox" checked>
+                            <span>5+ Candles</span>
+                        </label>
                     </div>
-                </aside>
+                </div>
+
+                <div class="panel-section">
+                    <h3>Support &amp; Resistance</h3>
+                    <div class="sr-header">
+                        <span class="sr-info-icon" title="Support is where price tends to stop falling. Resistance is where price tends to stop rising." role="tooltip">ⓘ</span>
+                    </div>
+                    <label class="sr-checkbox-label">
+                        <input type="checkbox" id="sr-show-levels" checked>
+                        Show Levels
+                    </label>
+                    <div class="sr-slider-group">
+                        <label for="sr-sensitivity">Sensitivity: <span id="sr-sensitivity-value">5</span></label>
+                        <input type="range" id="sr-sensitivity" min="1" max="10" value="5" class="sr-slider">
+                    </div>
+                    <div class="sr-slider-group">
+                        <label for="sr-min-strength">Min Strength: <span id="sr-min-strength-value">3</span></label>
+                        <input type="range" id="sr-min-strength" min="1" max="10" value="3" class="sr-slider">
+                    </div>
+                </div>
+            </div><!-- end sidebar-scroll-content -->
+
+            <!-- Settings gear at bottom-left of sidebar (always visible) -->
+            <div class="sidebar-footer">
+                <button id="settingsBtn" class="glass-button glass-button-secondary settings-bottom-btn" title="Settings">⚙️ Settings</button>
             </div>
-        </main>
-        
+        </aside>
+
+        <!-- Main content area (right of sidebar) -->
+        <div class="results-main-area">
+            <!-- Hidden elements for JS compatibility -->
+            <h1 id="stockTitle" class="hidden"></h1>
+            <p id="dateRange" class="date-range hidden"></p>
+
+            <!-- Control Pill (full-width stretched) -->
+            <div id="controlBar" class="control-bar glass-container hidden">
+                <div class="control-group">
+                    <label for="stock-input">Symbol:</label>
+                    <input type="text" id="stock-input" class="glass-input control-input" placeholder="e.g. AAPL" maxlength="10">
+                </div>
+                <div class="control-group">
+                    <label for="start-time-control">Start:</label>
+                    <input type="datetime-local" id="start-time-control" class="glass-input control-input">
+                </div>
+                <div class="control-group">
+                    <label for="end-time-control">End:</label>
+                    <input type="datetime-local" id="end-time-control" class="glass-input control-input">
+                </div>
+                <div class="control-group">
+                    <label for="interval-selector">Interval:</label>
+                    <select id="interval-selector" class="glass-input control-input">
+                        <option value="1min">1 Minute</option>
+                        <option value="5min">5 Minutes</option>
+                        <option value="15min">15 Minutes</option>
+                        <option value="30min">30 Minutes</option>
+                        <option value="45min">45 Minutes</option>
+                        <option value="1h">1 Hour</option>
+                        <option value="2h">2 Hours</option>
+                        <option value="4h">4 Hours</option>
+                        <option value="1day" selected>1 Day</option>
+                        <option value="1week">1 Week</option>
+                        <option value="1month">1 Month</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Action Buttons Row (under pill) -->
+            <div id="actionRow" class="action-row hidden">
+                <div class="action-left">
+                    <button id="refresh-time-btn" class="glass-button action-btn">
+                        ⏱️ Refresh Time
+                    </button>
+                    <button id="newAnalysisBtn" class="glass-button action-btn">
+                        New Analysis
+                    </button>
+                </div>
+                <div class="action-right">
+                    <button id="reanalyze-btn" class="glass-button action-btn">
+                        🔄 Re-Analyze
+                    </button>
+                </div>
+            </div>
+
+            <main class="results-main">
+                <!-- Results Layout: Main Content (center) + Patterns Panel (right) -->
+                <div class="results-layout">
+                    <!-- Main Content (center) -->
+                    <div class="main-content">
+                        <!-- Chart Section -->
+                        <section class="chart-section glass-container">
+                            <div class="chart-section-header">
+                                <h2>Chart</h2>
+                                <div class="chart-actions">
+                                    <span class="chart-hint">Shift+drag: zoom • Ctrl+drag: pan • Scroll: zoom</span>
+                                    <button id="reset-zoom-btn" class="glass-button glass-button-secondary chart-action-btn" title="Reset Zoom">
+                                        🔍 Reset
+                                    </button>
+                                    <button id="downloadBtn" class="glass-button glass-button-secondary chart-action-btn">
+                                        ⬇️ Download
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="chart-wrapper">
+                                <div id="annotation-toolbar-container" class="annotation-toolbar-container"></div>
+                                <canvas id="stockChart"></canvas>
+                                <!-- Right panel expand button (visible when patterns panel is collapsed) -->
+                                <button id="right-panel-expand-btn" class="patterns-expand-btn hidden" title="Expand Patterns List">
+                                    Patterns ◀
+                                </button>
+                            </div>
+                        </section>
+                    </div>
+
+                    <!-- Right Patterns Panel (collapsible – chart expand button shows in chart-wrapper) -->
+                    <aside class="right-panel glass-container" id="patternsPanel">
+                        <div class="sidebar-header">
+                            <h3>Detected Patterns (<span id="pattern-count">0</span>)</h3>
+                            <button id="right-panel-toggle" class="panel-collapse-btn" title="Collapse Patterns Panel">▶</button>
+                        </div>
+                        <p id="pattern-count-display" class="pattern-count-label">0 patterns found</p>
+                        <!-- Pattern List -->
+                        <div id="sidebar-pattern-list" class="sidebar-pattern-list">
+                            <!-- Populated by JS -->
+                        </div>
+                    </aside>
+                </div>
+            </main>
+
+            <!-- Error Message -->
+            <div id="errorContainer" class="glass-container hidden">
+                <div class="error-message show">
+                    <p id="errorText"></p>
+                </div>
+                <button id="retryBtn" class="glass-button">
+                    Return to Analyzer
+                </button>
+            </div>
+
+            <!-- No patterns message (hidden, used by JS) -->
+            <div id="noPatterns" class="no-patterns hidden">
+                <p>No patterns found for the selected filters.</p>
+            </div>
+        </div><!-- end results-main-area -->
+
         <!-- Loading Overlay -->
         <div id="loadingOverlay" class="loading-overlay">
             <div class="spinner"></div>
             <div class="loading-text">Processing pattern analysis...</div>
-        </div>
-        
-        <!-- Error Message -->
-        <div id="errorContainer" class="glass-container hidden">
-            <div class="error-message show">
-                <p id="errorText"></p>
-            </div>
-            <button id="retryBtn" class="glass-button">
-                Return to Analyzer
-            </button>
-        </div>
-
-        <!-- No patterns message (hidden, used by JS) -->
-        <div id="noPatterns" class="no-patterns hidden">
-            <p>No patterns found for the selected filters.</p>
         </div>
     </div>
 

@@ -23,9 +23,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const actionRow = document.getElementById('actionRow');
     const resultsContainer = document.getElementById('resultsContainer');
 
-    // Filter panel (left) toggle button
-    const patternsListToggle = document.getElementById('patterns-list-toggle');
-
     // Right panel (patterns) toggle button
     const rightPanelToggle = document.getElementById('right-panel-toggle');
 
@@ -554,71 +551,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    // ---- Sidebar (Filter Panel) Toggle ----
-    async function loadSidebarPref() {
-        return new Promise((resolve) => {
-            chrome.storage.local.get(['sidebarHidden'], (result) => {
-                resolve(result.sidebarHidden === true);
-            });
-        });
-    }
-
-    async function saveSidebarPref(hidden) {
-        return new Promise((resolve) => {
-            chrome.storage.local.set({ sidebarHidden: hidden }, resolve);
-        });
-    }
-
-    const filterPanelExpandBtn = document.getElementById('filter-panel-expand');
+    // ---- Sidebar (Filter Panel) — always visible, no collapse ----
     const rightPanelExpandBtn = document.getElementById('right-panel-expand-btn');
-
-    function updateSidebarToggleIcon(hidden) {
-        // Update the collapse btn icon inside the filter panel
-        if (patternsListToggle) {
-            patternsListToggle.textContent = hidden ? '▶' : '◀';
-        }
-        // Show/hide the expand button in chart header
-        if (filterPanelExpandBtn) {
-            filterPanelExpandBtn.classList.toggle('hidden', !hidden);
-        }
-    }
-
-    function collapseOrExpandSidebar(forceHide) {
-        const isHidden = forceHide !== undefined
-            ? forceHide
-            : !resultsContainer.classList.contains('sidebar-hidden');
-        if (isHidden) {
-            resultsContainer.classList.add('sidebar-hidden');
-        } else {
-            resultsContainer.classList.remove('sidebar-hidden');
-        }
-        updateSidebarToggleIcon(isHidden);
-        saveSidebarPref(isHidden);
-        setTimeout(() => {
-            if (chart) { chart.resize(); chart.update('none'); }
-        }, PANEL_ANIMATION_DURATION);
-        return isHidden;
-    }
-
-    const sidebarHidden = await loadSidebarPref();
-    if (sidebarHidden) {
-        resultsContainer.classList.add('sidebar-hidden');
-    }
-    updateSidebarToggleIcon(sidebarHidden);
-
-    // Collapse button inside filter panel header
-    if (patternsListToggle) {
-        patternsListToggle.addEventListener('click', async () => {
-            collapseOrExpandSidebar();
-        });
-    }
-
-    // Expand button in chart section header (visible when filter panel is collapsed)
-    if (filterPanelExpandBtn) {
-        filterPanelExpandBtn.addEventListener('click', () => {
-            collapseOrExpandSidebar(false);
-        });
-    }
 
     // ---- Right Panel (Patterns) Toggle ----
     function updateRightPanelToggleIcon(hidden) {
@@ -1435,24 +1369,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         resizer.addEventListener('mousedown', startResize);
-
-        // For the sidebar: allow dragging from the thin line to expand
-        if (side === 'right') {
-            panelEl.addEventListener('mousedown', (e) => {
-                if (resultsContainer.classList.contains('sidebar-hidden')) {
-                    // Expand panel from collapsed thin-line state, then resize
-                    collapseOrExpandSidebar(false);
-                    isResizing = true;
-                    startX = e.clientX;
-                    startWidth = MIN_PANEL_WIDTH;
-                    panelEl.style.width = MIN_PANEL_WIDTH + 'px';
-                    panelEl.style.minWidth = MIN_PANEL_WIDTH + 'px';
-                    document.body.style.cursor = 'ew-resize';
-                    document.body.style.userSelect = 'none';
-                    e.preventDefault();
-                }
-            });
-        }
 
         document.addEventListener('mousemove', (e) => {
             if (!isResizing) return;
