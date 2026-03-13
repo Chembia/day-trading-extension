@@ -1163,10 +1163,10 @@ body {
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     border: 1px solid rgba(182, 182, 182, 0.3);
-    border-radius: 10px;
-    padding: 12px 7px;
+    border-radius: 8px;
+    padding: 14px 6px;
     cursor: pointer;
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 700;
     color: var(--text-primary);
     z-index: 10;
@@ -1177,11 +1177,11 @@ body {
     justify-content: center;
     gap: 6px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
-    white-space: nowrap;
-    writing-mode: vertical-rl;
+    writing-mode: vertical-lr;
     text-orientation: mixed;
-    transform: translateY(-50%) rotate(180deg);
-    letter-spacing: 0.5px;
+    letter-spacing: 0.8px;
+    line-height: 1.2;
+    min-width: 26px;
 }
 
 .patterns-expand-btn:hover {
@@ -1245,15 +1245,6 @@ body {
     font-weight: 600;
     color: var(--text-primary);
     margin: 0 0 10px 0;
-};
-    overflow-y: auto;
-    padding: 16px;
-    display: flex;
-    flex-direction: column;
-    gap: 0;
-    position: sticky;
-    top: 20px;
-    transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .panel-section {
