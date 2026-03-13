@@ -20,6 +20,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const downloadBtn = document.getElementById('downloadBtn');
     const retryBtn = document.getElementById('retryBtn');
     const controlBar = document.getElementById('controlBar');
+    const actionRow = document.getElementById('actionRow');
     const resultsContainer = document.getElementById('resultsContainer');
 
     // Filter panel (left) toggle button
@@ -1501,6 +1502,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (endTimeControl) endTimeControl.value = toDatetimeLocal(endDate);
         if (intervalSelector && interval) intervalSelector.value = interval;
         if (controlBar) controlBar.classList.remove('hidden');
+        if (actionRow) actionRow.classList.remove('hidden');
 
         // Set default Show Top to 5
         if (topNInput) topNInput.value = 5;
