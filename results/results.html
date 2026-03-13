@@ -15,23 +15,11 @@
 </head>
 <body>
     <div id="resultsContainer" class="results-container">
-        <header class="results-header glass-container">
-            <div class="header-stock-info">
-                <h1 id="stockTitle">Loading...</h1>
-                <p id="dateRange" class="date-range"></p>
-            </div>
-            <div class="header-brand">
-                <span class="fluey-title">fluey</span>
-            </div>
-            <div class="header-actions">
-                <button id="newAnalysisBtn" class="glass-button">
-                    New Analysis
-                </button>
-                <button id="settingsBtn" class="glass-button glass-button-secondary" title="Settings">⚙️</button>
-            </div>
-        </header>
+        <!-- Hidden elements for JS compatibility -->
+        <h1 id="stockTitle" class="hidden"></h1>
+        <p id="dateRange" class="date-range hidden"></p>
 
-        <!-- Top Control Bar (pill) -->
+        <!-- Control Pill (full-width stretched) -->
         <div id="controlBar" class="control-bar glass-container hidden">
             <div class="control-group">
                 <label for="stock-input">Symbol:</label>
@@ -61,12 +49,23 @@
                     <option value="1month">1 Month</option>
                 </select>
             </div>
-            <button id="reanalyze-btn" class="glass-button reanalyze-btn">
-                🔄 Re-Analyze
-            </button>
-            <button id="refresh-time-btn" class="glass-button refresh-time-btn">
-                ⏱️ Refresh Time
-            </button>
+        </div>
+
+        <!-- Action Buttons Row (under pill) -->
+        <div id="actionRow" class="action-row hidden">
+            <div class="action-left">
+                <button id="refresh-time-btn" class="glass-button action-btn">
+                    ⏱️ Refresh Time
+                </button>
+                <button id="newAnalysisBtn" class="glass-button action-btn">
+                    New Analysis
+                </button>
+            </div>
+            <div class="action-right">
+                <button id="reanalyze-btn" class="glass-button action-btn">
+                    🔄 Re-Analyze
+                </button>
+            </div>
         </div>
         
         <main class="results-main">
@@ -74,69 +73,82 @@
             <div class="results-layout">
                 <!-- Left Filter Panel (collapsible to thin line) -->
                 <aside class="sidebar glass-container" id="filterPanel">
+                    <!-- Logo at top of sidebar -->
+                    <div class="sidebar-logo">
+                        <span class="fluey-title">fluey</span>
+                    </div>
+
                     <div class="sidebar-header">
                         <h3>Filters</h3>
                         <button id="patterns-list-toggle" class="panel-collapse-btn" title="Collapse Filter Panel">◀</button>
                     </div>
 
-                    <div class="panel-section">
-                        <h3>Filter</h3>
-                        <select id="pattern-type-filter" class="glass-input filter-input">
-                            <option value="all">All Patterns</option>
-                            <option value="none">Chart Only (No Patterns)</option>
-                            <option value="bullish">Bullish</option>
-                            <option value="bearish">Bearish</option>
-                            <option value="neutral">Neutral</option>
-                        </select>
-                    </div>
+                    <!-- Scrollable filter content -->
+                    <div class="sidebar-scroll-content">
+                        <div class="panel-section">
+                            <h3>Filter</h3>
+                            <select id="pattern-type-filter" class="glass-input filter-input">
+                                <option value="all">All Patterns</option>
+                                <option value="none">Chart Only (No Patterns)</option>
+                                <option value="bullish">Bullish</option>
+                                <option value="bearish">Bearish</option>
+                                <option value="neutral">Neutral</option>
+                            </select>
+                        </div>
 
-                    <div class="panel-section">
-                        <h3>Show Top</h3>
-                        <div class="show-top-controls">
-                            <input type="number" id="top-n-input" class="glass-input" value="5" min="1" max="999">
-                            <button id="show-all-btn" class="glass-button glass-button-secondary show-all-btn">All</button>
+                        <div class="panel-section">
+                            <h3>Show Top</h3>
+                            <div class="show-top-controls">
+                                <input type="number" id="top-n-input" class="glass-input" value="5" min="1" max="999">
+                                <button id="show-all-btn" class="glass-button glass-button-secondary show-all-btn">All</button>
+                            </div>
                         </div>
-                    </div>
 
-                    <div class="panel-section">
-                        <h3>Show Pattern Clusters Of</h3>
-                        <div class="cluster-filter">
-                            <label class="cluster-checkbox-label">
-                                <input type="checkbox" value="2" class="cluster-checkbox" checked>
-                                <span>2 Candles</span>
-                            </label>
-                            <label class="cluster-checkbox-label">
-                                <input type="checkbox" value="3" class="cluster-checkbox" checked>
-                                <span>3 Candles</span>
-                            </label>
-                            <label class="cluster-checkbox-label">
-                                <input type="checkbox" value="4" class="cluster-checkbox" checked>
-                                <span>4 Candles</span>
-                            </label>
-                            <label class="cluster-checkbox-label">
-                                <input type="checkbox" value="5" class="cluster-checkbox" checked>
-                                <span>5+ Candles</span>
-                            </label>
+                        <div class="panel-section">
+                            <h3>Show Pattern Clusters Of</h3>
+                            <div class="cluster-filter">
+                                <label class="cluster-checkbox-label">
+                                    <input type="checkbox" value="2" class="cluster-checkbox" checked>
+                                    <span>2 Candles</span>
+                                </label>
+                                <label class="cluster-checkbox-label">
+                                    <input type="checkbox" value="3" class="cluster-checkbox" checked>
+                                    <span>3 Candles</span>
+                                </label>
+                                <label class="cluster-checkbox-label">
+                                    <input type="checkbox" value="4" class="cluster-checkbox" checked>
+                                    <span>4 Candles</span>
+                                </label>
+                                <label class="cluster-checkbox-label">
+                                    <input type="checkbox" value="5" class="cluster-checkbox" checked>
+                                    <span>5+ Candles</span>
+                                </label>
+                            </div>
                         </div>
-                    </div>
 
-                    <div class="panel-section">
-                        <h3>Support &amp; Resistance</h3>
-                        <div class="sr-header">
-                            <span class="sr-info-icon" title="Support is where price tends to stop falling. Resistance is where price tends to stop rising." role="tooltip">ⓘ</span>
+                        <div class="panel-section">
+                            <h3>Support &amp; Resistance</h3>
+                            <div class="sr-header">
+                                <span class="sr-info-icon" title="Support is where price tends to stop falling. Resistance is where price tends to stop rising." role="tooltip">ⓘ</span>
+                            </div>
+                            <label class="sr-checkbox-label">
+                                <input type="checkbox" id="sr-show-levels" checked>
+                                Show Levels
+                            </label>
+                            <div class="sr-slider-group">
+                                <label for="sr-sensitivity">Sensitivity: <span id="sr-sensitivity-value">5</span></label>
+                                <input type="range" id="sr-sensitivity" min="1" max="10" value="5" class="sr-slider">
+                            </div>
+                            <div class="sr-slider-group">
+                                <label for="sr-min-strength">Min Strength: <span id="sr-min-strength-value">3</span></label>
+                                <input type="range" id="sr-min-strength" min="1" max="10" value="3" class="sr-slider">
+                            </div>
                         </div>
-                        <label class="sr-checkbox-label">
-                            <input type="checkbox" id="sr-show-levels" checked>
-                            Show Levels
-                        </label>
-                        <div class="sr-slider-group">
-                            <label for="sr-sensitivity">Sensitivity: <span id="sr-sensitivity-value">5</span></label>
-                            <input type="range" id="sr-sensitivity" min="1" max="10" value="5" class="sr-slider">
-                        </div>
-                        <div class="sr-slider-group">
-                            <label for="sr-min-strength">Min Strength: <span id="sr-min-strength-value">3</span></label>
-                            <input type="range" id="sr-min-strength" min="1" max="10" value="3" class="sr-slider">
-                        </div>
+                    </div><!-- end sidebar-scroll-content -->
+
+                    <!-- Settings gear at bottom-left of sidebar (always visible) -->
+                    <div class="sidebar-footer">
+                        <button id="settingsBtn" class="glass-button glass-button-secondary settings-bottom-btn" title="Settings">⚙️ Settings</button>
                     </div>
                 </aside>
 
