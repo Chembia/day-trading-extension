@@ -22,15 +22,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     const controlBar = document.getElementById('controlBar');
     const resultsContainer = document.getElementById('resultsContainer');
 
-    // Sidebar
+    // Filter panel (left) toggle button
     const patternsListToggle = document.getElementById('patterns-list-toggle');
 
-    // Right panel toggle
+    // Right panel (patterns) toggle button
     const rightPanelToggle = document.getElementById('right-panel-toggle');
 
-    // Filter elements (now in right panel)
+    // Filter elements (in left filter panel)
     const patternTypeFilter = document.getElementById('pattern-type-filter');
     const topNInput = document.getElementById('top-n-input');
+    // Pattern list (in right patterns panel)
     const sidebarPatternList = document.getElementById('sidebar-pattern-list');
 
     // Control bar elements
@@ -552,7 +553,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    // ---- Sidebar Toggle ----
+    // ---- Sidebar (Filter Panel) Toggle ----
     async function loadSidebarPref() {
         return new Promise((resolve) => {
             chrome.storage.local.get(['sidebarHidden'], (result) => {
@@ -567,11 +568,35 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
+    const filterPanelExpandBtn = document.getElementById('filter-panel-expand');
+    const rightPanelExpandBtn = document.getElementById('right-panel-expand-btn');
+
     function updateSidebarToggleIcon(hidden) {
+        // Update the collapse btn icon inside the filter panel
         if (patternsListToggle) {
-            const icon = patternsListToggle.querySelector('.toggle-icon');
-            if (icon) icon.textContent = hidden ? '▶' : '◀';
+            patternsListToggle.textContent = hidden ? '▶' : '◀';
         }
+        // Show/hide the expand button in chart header
+        if (filterPanelExpandBtn) {
+            filterPanelExpandBtn.classList.toggle('hidden', !hidden);
+        }
+    }
+
+    function collapseOrExpandSidebar(forceHide) {
+        const isHidden = forceHide !== undefined
+            ? forceHide
+            : !resultsContainer.classList.contains('sidebar-hidden');
+        if (isHidden) {
+            resultsContainer.classList.add('sidebar-hidden');
+        } else {
+            resultsContainer.classList.remove('sidebar-hidden');
+        }
+        updateSidebarToggleIcon(isHidden);
+        saveSidebarPref(isHidden);
+        setTimeout(() => {
+            if (chart) { chart.resize(); chart.update('none'); }
+        }, PANEL_ANIMATION_DURATION);
+        return isHidden;
     }
 
     const sidebarHidden = await loadSidebarPref();
@@ -580,48 +605,60 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     updateSidebarToggleIcon(sidebarHidden);
 
+    // Collapse button inside filter panel header
     if (patternsListToggle) {
         patternsListToggle.addEventListener('click', async () => {
-            const isHidden = resultsContainer.classList.toggle('sidebar-hidden');
-            updateSidebarToggleIcon(isHidden);
-            await saveSidebarPref(isHidden);
-            // Trigger chart resize after sidebar animation
-            setTimeout(() => {
-                if (chart) {
-                    chart.resize();
-                    chart.update('none');
-                }
-            }, PANEL_ANIMATION_DURATION);
+            collapseOrExpandSidebar();
         });
     }
 
-    // ---- Right Panel Toggle ----
+    // Expand button in chart section header (visible when filter panel is collapsed)
+    if (filterPanelExpandBtn) {
+        filterPanelExpandBtn.addEventListener('click', () => {
+            collapseOrExpandSidebar(false);
+        });
+    }
+
+    // ---- Right Panel (Patterns) Toggle ----
     function updateRightPanelToggleIcon(hidden) {
         if (rightPanelToggle) {
-            const icon = rightPanelToggle.querySelector('.toggle-icon');
-            if (icon) icon.textContent = hidden ? '◀' : '▶';
+            rightPanelToggle.textContent = hidden ? '◀' : '▶';
         }
+        // Show/hide the in-chart expand button
+        if (rightPanelExpandBtn) {
+            rightPanelExpandBtn.classList.toggle('hidden', !hidden);
+        }
+    }
+
+    function collapseOrExpandRightPanel(forceHide) {
+        const layout = document.querySelector('.results-layout');
+        if (!layout) return;
+        const rightPanelEl = document.querySelector('.right-panel');
+        const isHidden = forceHide !== undefined
+            ? forceHide
+            : !layout.classList.contains('right-panel-hidden');
+        if (isHidden) {
+            layout.classList.add('right-panel-hidden');
+            if (rightPanelEl) { rightPanelEl.style.width = ''; rightPanelEl.style.minWidth = ''; }
+        } else {
+            layout.classList.remove('right-panel-hidden');
+        }
+        updateRightPanelToggleIcon(isHidden);
+        setTimeout(() => {
+            if (chart) { chart.resize(); chart.update('none'); }
+        }, PANEL_ANIMATION_DURATION);
     }
 
     if (rightPanelToggle) {
         rightPanelToggle.addEventListener('click', () => {
-            const layout = document.querySelector('.results-layout');
-            if (!layout) return;
-            const rightPanelEl = document.querySelector('.right-panel');
-            const isHidden = layout.classList.toggle('right-panel-hidden');
-            // Clear any inline width set by the resizer so CSS transition can take over
-            if (isHidden && rightPanelEl) {
-                rightPanelEl.style.width = '';
-                rightPanelEl.style.minWidth = '';
-            }
-            updateRightPanelToggleIcon(isHidden);
-            // Trigger chart resize after right panel animation
-            setTimeout(() => {
-                if (chart) {
-                    chart.resize();
-                    chart.update('none');
-                }
-            }, PANEL_ANIMATION_DURATION);
+            collapseOrExpandRightPanel();
+        });
+    }
+
+    // Expand button inside chart-wrapper (visible when right panel is collapsed)
+    if (rightPanelExpandBtn) {
+        rightPanelExpandBtn.addEventListener('click', () => {
+            collapseOrExpandRightPanel(false);
         });
     }
 
@@ -1387,14 +1424,34 @@ document.addEventListener('DOMContentLoaded', async () => {
         let startX = 0;
         let startWidth = 0;
 
-        resizer.addEventListener('mousedown', (e) => {
+        function startResize(e) {
             isResizing = true;
             startX = e.clientX;
             startWidth = panelEl.offsetWidth;
             document.body.style.cursor = 'ew-resize';
             document.body.style.userSelect = 'none';
             e.preventDefault();
-        });
+        }
+
+        resizer.addEventListener('mousedown', startResize);
+
+        // For the sidebar: allow dragging from the thin line to expand
+        if (side === 'right') {
+            panelEl.addEventListener('mousedown', (e) => {
+                if (resultsContainer.classList.contains('sidebar-hidden')) {
+                    // Expand panel from collapsed thin-line state, then resize
+                    collapseOrExpandSidebar(false);
+                    isResizing = true;
+                    startX = e.clientX;
+                    startWidth = MIN_PANEL_WIDTH;
+                    panelEl.style.width = MIN_PANEL_WIDTH + 'px';
+                    panelEl.style.minWidth = MIN_PANEL_WIDTH + 'px';
+                    document.body.style.cursor = 'ew-resize';
+                    document.body.style.userSelect = 'none';
+                    e.preventDefault();
+                }
+            });
+        }
 
         document.addEventListener('mousemove', (e) => {
             if (!isResizing) return;

@@ -6,7 +6,7 @@
     <title>Fluey - Pattern Analysis Results</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Alex+Brush&family=DM+Sans:wght@400;500;600;700&family=EB+Garamond:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Chewy&family=DM+Sans:wght@400;500;600;700&family=EB+Garamond:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../styles/common.css">
     <link rel="stylesheet" href="results.css">
     <script src="../scripts/lib/chart.umd.min.js"></script>
@@ -31,7 +31,7 @@
             </div>
         </header>
 
-        <!-- Top Control Bar -->
+        <!-- Top Control Bar (pill) -->
         <div id="controlBar" class="control-bar glass-container hidden">
             <div class="control-group">
                 <label for="stock-input">Symbol:</label>
@@ -70,57 +70,15 @@
         </div>
         
         <main class="results-main">
-            <!-- Results Layout: Sidebar (left) + Main Content (center) + Right Panel -->
+            <!-- Results Layout: Filter Panel (left) + Main Content (center) + Patterns Panel (right) -->
             <div class="results-layout">
-                <!-- Sidebar (left) - patterns list only -->
-                <aside class="sidebar glass-container">
+                <!-- Left Filter Panel (collapsible to thin line) -->
+                <aside class="sidebar glass-container" id="filterPanel">
                     <div class="sidebar-header">
-                        <h3>Detected Patterns (<span id="pattern-count">0</span>)</h3>
+                        <h3>Filters</h3>
+                        <button id="patterns-list-toggle" class="panel-collapse-btn" title="Collapse Filter Panel">◀</button>
                     </div>
-                    <!-- Pattern List -->
-                    <div id="sidebar-pattern-list" class="sidebar-pattern-list">
-                        <!-- Populated by JS -->
-                    </div>
-                </aside>
 
-                <!-- Main Content (center) -->
-                <div class="main-content">
-                    <!-- Chart Section -->
-                    <section class="chart-section glass-container">
-                        <div class="chart-section-header">
-                            <button id="patterns-list-toggle" class="chart-toggle-btn" title="Toggle Patterns List">
-                                <span class="toggle-icon">◀</span>
-                                <span class="toggle-label">Patterns List</span>
-                            </button>
-                            <h2>Chart</h2>
-                            <div class="chart-actions">
-                                <span class="chart-hint">Shift+drag: zoom • Ctrl+drag: pan • Scroll: zoom</span>
-                                <button id="reset-zoom-btn" class="glass-button glass-button-secondary chart-action-btn" title="Reset Zoom">
-                                    🔍 Reset
-                                </button>
-                                <button id="downloadBtn" class="glass-button glass-button-secondary chart-action-btn">
-                                    ⬇️ Download
-                                </button>
-                                <button id="right-panel-toggle" class="chart-toggle-btn" title="Toggle Settings Panel">
-                                    <span class="toggle-label">Settings</span>
-                                    <span class="toggle-icon">▶</span>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="chart-wrapper">
-                            <div id="annotation-toolbar-container" class="annotation-toolbar-container"></div>
-                            <canvas id="stockChart"></canvas>
-                        </div>
-                    </section>
-                </div>
-
-                <!-- Right Panel -->
-                <aside class="right-panel glass-container">
-                    <div class="panel-section">
-                        <h3>Detected Patterns</h3>
-                        <p id="pattern-count-display">0 patterns found</p>
-                    </div>
-                    
                     <div class="panel-section">
                         <h3>Filter</h3>
                         <select id="pattern-type-filter" class="glass-input filter-input">
@@ -131,7 +89,7 @@
                             <option value="neutral">Neutral</option>
                         </select>
                     </div>
-                    
+
                     <div class="panel-section">
                         <h3>Show Top</h3>
                         <div class="show-top-controls">
@@ -161,7 +119,7 @@
                             </label>
                         </div>
                     </div>
-                    
+
                     <div class="panel-section">
                         <h3>Support &amp; Resistance</h3>
                         <div class="sr-header">
@@ -180,7 +138,50 @@
                             <input type="range" id="sr-min-strength" min="1" max="10" value="3" class="sr-slider">
                         </div>
                     </div>
-                    
+                </aside>
+
+                <!-- Main Content (center) -->
+                <div class="main-content">
+                    <!-- Chart Section -->
+                    <section class="chart-section glass-container">
+                        <div class="chart-section-header">
+                            <button id="filter-panel-expand" class="chart-toggle-btn filter-expand-btn hidden" title="Expand Filter Panel">
+                                <span class="toggle-icon">▶</span>
+                                <span class="toggle-label">Filters</span>
+                            </button>
+                            <h2>Chart</h2>
+                            <div class="chart-actions">
+                                <span class="chart-hint">Shift+drag: zoom • Ctrl+drag: pan • Scroll: zoom</span>
+                                <button id="reset-zoom-btn" class="glass-button glass-button-secondary chart-action-btn" title="Reset Zoom">
+                                    🔍 Reset
+                                </button>
+                                <button id="downloadBtn" class="glass-button glass-button-secondary chart-action-btn">
+                                    ⬇️ Download
+                                </button>
+                            </div>
+                        </div>
+                        <div class="chart-wrapper">
+                            <div id="annotation-toolbar-container" class="annotation-toolbar-container"></div>
+                            <canvas id="stockChart"></canvas>
+                            <!-- Right panel expand button (visible when patterns panel is collapsed) -->
+                            <button id="right-panel-expand-btn" class="patterns-expand-btn hidden" title="Expand Patterns List">
+                                Patterns ◀
+                            </button>
+                        </div>
+                    </section>
+                </div>
+
+                <!-- Right Patterns Panel (collapsible – chart expand button shows in chart-wrapper) -->
+                <aside class="right-panel glass-container" id="patternsPanel">
+                    <div class="sidebar-header">
+                        <h3>Detected Patterns (<span id="pattern-count">0</span>)</h3>
+                        <button id="right-panel-toggle" class="panel-collapse-btn" title="Collapse Patterns Panel">▶</button>
+                    </div>
+                    <p id="pattern-count-display" class="pattern-count-label">0 patterns found</p>
+                    <!-- Pattern List -->
+                    <div id="sidebar-pattern-list" class="sidebar-pattern-list">
+                        <!-- Populated by JS -->
+                    </div>
                 </aside>
             </div>
         </main>
