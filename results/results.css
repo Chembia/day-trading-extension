@@ -57,17 +57,18 @@ body {
 }
 
 .fluey-title {
-    font-family: 'Alex Brush', cursive;
-    font-size: 56px;
+    font-family: 'Chewy', cursive;
+    font-size: 60px;
     font-weight: 400;
-    letter-spacing: 4px;
+    letter-spacing: 3px;
     color: var(--text-primary);
     text-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    line-height: 1;
 }
 
 [data-theme="dark"] .fluey-title {
     color: var(--text-primary);
-    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
+    text-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
 }
 
 .header-actions {
@@ -83,14 +84,83 @@ body {
     font-size: 14px;
 }
 
-/* Control Bar */
+/* Control Bar Pill */
 .control-bar {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 16px;
-    padding: 16px 24px;
-    margin-bottom: 20px;
+    gap: 14px;
+    padding: 12px 24px;
+    margin-bottom: 16px;
+    /* Pill shape */
+    border-radius: 50px;
+    max-width: 960px;
+    margin-left: auto;
+    margin-right: auto;
+    /* Light mode: dark pill */
+    background: rgba(28, 28, 28, 0.88) !important;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.25) !important;
+}
+
+.control-bar .control-group label {
+    color: rgba(255, 255, 255, 0.82) !important;
+}
+
+.control-bar .glass-input {
+    background: rgba(255, 255, 255, 0.12) !important;
+    border-color: rgba(255, 255, 255, 0.2) !important;
+    color: #fff !important;
+}
+
+.control-bar .glass-input::placeholder {
+    color: rgba(255, 255, 255, 0.4) !important;
+}
+
+.control-bar .glass-button {
+    background: rgba(255, 255, 255, 0.15) !important;
+    color: #fff !important;
+    border-color: rgba(255, 255, 255, 0.25) !important;
+    border-radius: 30px !important;
+}
+
+.control-bar .glass-button:hover {
+    background: rgba(255, 255, 255, 0.25) !important;
+    transform: translateY(-1px);
+}
+
+/* Dark mode: transparent glass pill */
+[data-theme="dark"] .control-bar {
+    background: rgba(255, 255, 255, 0.06) !important;
+    border-color: rgba(255, 255, 255, 0.12) !important;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.35) !important;
+}
+
+[data-theme="dark"] .control-bar .control-group label {
+    color: rgba(255, 248, 220, 0.75) !important;
+}
+
+[data-theme="dark"] .control-bar .glass-input {
+    background: rgba(255, 255, 255, 0.07) !important;
+    border-color: rgba(255, 255, 255, 0.12) !important;
+    color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] .control-bar .glass-input::placeholder {
+    color: rgba(255, 248, 220, 0.35) !important;
+}
+
+[data-theme="dark"] .control-bar .glass-button {
+    background: rgba(3, 11, 23, 0.75) !important;
+    color: var(--text-primary) !important;
+    border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+[data-theme="dark"] .control-bar .glass-button:hover {
+    background: rgba(6, 18, 40, 0.9) !important;
+    border-color: rgba(100, 150, 220, 0.3) !important;
 }
 
 .control-group {
@@ -158,22 +228,39 @@ body {
     transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), padding 0.4s cubic-bezier(0.4, 0, 0.2, 1), min-width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Sidebar hidden state */
+/* Sidebar hidden state → thin vertical line */
 .sidebar-hidden .sidebar {
-    width: 0;
-    min-width: 0;
-    opacity: 0;
+    width: 8px;
+    min-width: 8px;
+    opacity: 0.6;
     overflow: hidden;
     padding: 0;
     margin: 0;
-    pointer-events: none;
+    cursor: ew-resize;
+    background: rgba(124, 198, 239, 0.4) !important;
+    backdrop-filter: blur(8px);
+    border-radius: 6px;
+    pointer-events: auto;
+}
+
+.sidebar-hidden .sidebar:hover {
+    opacity: 1;
+    background: rgba(124, 198, 239, 0.65) !important;
+}
+
+[data-theme="dark"] .sidebar-hidden .sidebar {
+    background: rgba(100, 150, 220, 0.28) !important;
+}
+
+[data-theme="dark"] .sidebar-hidden .sidebar:hover {
+    background: rgba(100, 150, 220, 0.5) !important;
 }
 
 .sidebar-hidden .results-layout {
     /* flex layout handles this automatically */
 }
 
-/* Right panel hidden state */
+/* Right panel hidden state → fully hidden (expand button shows inside chart) */
 .right-panel-hidden .right-panel {
     width: 0;
     min-width: 0;
@@ -660,28 +747,36 @@ body {
     color: #2C2C2C;
 }
 
+/* Light mode: dark buttons */
+[data-theme="light"] .glass-button:not(.control-bar .glass-button) {
+    background: rgba(30, 30, 30, 0.82);
+    color: #fff;
+    border-color: rgba(0, 0, 0, 0.18);
+}
+
+[data-theme="light"] .glass-button:not(.control-bar .glass-button):hover {
+    background: rgba(10, 10, 10, 0.92);
+    border-color: rgba(0, 0, 0, 0.28);
+}
+
+[data-theme="light"] .glass-button-secondary:not(.control-bar .glass-button) {
+    background: rgba(50, 50, 50, 0.75);
+    color: #fff;
+    border-color: rgba(0, 0, 0, 0.12);
+}
+
+[data-theme="light"] .glass-button-secondary:not(.control-bar .glass-button):hover {
+    background: rgba(30, 30, 30, 0.88);
+}
+
 /* Dark Mode */
 [data-theme="dark"] body {
     background-color: #030b17;
-    background-image: linear-gradient(
-        135deg,
-        #030b17 0%,
-        #060f1e 20%,
-        #071a33 40%,
-        #0a1f3a 60%,
-        #060f1e 80%,
-        #030b17 100%
-    );
-    background-size: 300% 300%;
+    background-image: url('../assets/fluey_dark-mode_background.jpg');
+    background-size: 110% 110%;
     background-position: 0% 0%;
-    animation: darkNavyGradient 20s ease-in-out infinite alternate;
+    animation: bgPan 20s ease-in-out infinite alternate;
     color: var(--text-primary);
-}
-
-@keyframes darkNavyGradient {
-    0% { background-position: 0% 0%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 100%; }
 }
 
 [data-theme="dark"] h1,
@@ -729,13 +824,14 @@ body {
 }
 
 [data-theme="dark"] .glass-button {
-    background: linear-gradient(135deg, rgba(3, 11, 23, 0.85), rgba(7, 26, 51, 0.75));
-    border-color: rgba(255, 255, 255, 0.15);
+    background: linear-gradient(135deg, rgba(3, 11, 23, 0.88), rgba(7, 26, 51, 0.78));
+    border-color: rgba(255, 255, 255, 0.13);
     color: var(--text-primary);
+    border-radius: 12px;
 }
 
 [data-theme="dark"] .glass-button:hover {
-    background: linear-gradient(135deg, rgba(6, 18, 40, 0.9), rgba(10, 33, 65, 0.85));
+    background: linear-gradient(135deg, rgba(6, 18, 40, 0.93), rgba(10, 33, 65, 0.88));
     border-color: rgba(100, 150, 220, 0.3);
 }
 
@@ -991,11 +1087,11 @@ body {
     font-weight: bold;
 }
 
-/* Right Panel */
+/* Right Panel – glass card */
 .right-panel {
-    width: 280px;
+    width: 260px;
     min-width: 200px;
-    max-width: 600px;
+    max-width: 500px;
     flex-shrink: 0;
     max-height: calc(100vh - 160px);
     overflow-y: auto;
@@ -1005,7 +1101,150 @@ body {
     gap: 0;
     position: sticky;
     top: 20px;
-    transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                min-width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Glass card: reflects background */
+    background: rgba(255, 255, 255, 0.3) !important;
+    backdrop-filter: blur(24px) !important;
+    -webkit-backdrop-filter: blur(24px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.5) !important;
+    box-shadow: 0 8px 32px rgba(180, 210, 255, 0.18),
+                inset 0 1px 0 rgba(255, 255, 255, 0.6) !important;
+}
+
+[data-theme="dark"] .right-panel {
+    background: rgba(20, 35, 60, 0.5) !important;
+    backdrop-filter: blur(24px) !important;
+    -webkit-backdrop-filter: blur(24px) !important;
+    border-color: rgba(100, 150, 220, 0.25) !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 10, 0.35),
+                inset 0 1px 0 rgba(100, 150, 220, 0.2) !important;
+}
+
+/* ---- Panel Collapse/Expand Buttons ---- */
+.panel-collapse-btn {
+    background: none;
+    border: 1px solid rgba(182, 182, 182, 0.3);
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-size: 11px;
+    cursor: pointer;
+    color: var(--text-secondary);
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+    line-height: 1;
+}
+
+.panel-collapse-btn:hover {
+    background: rgba(124, 198, 239, 0.3);
+    border-color: rgba(124, 198, 239, 0.5);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .panel-collapse-btn {
+    border-color: rgba(255, 255, 255, 0.15);
+    color: var(--text-secondary);
+}
+
+[data-theme="dark"] .panel-collapse-btn:hover {
+    background: rgba(100, 150, 220, 0.2);
+    border-color: rgba(100, 150, 220, 0.4);
+    color: var(--text-primary);
+}
+
+/* Patterns expand button – positioned inside chart-wrapper */
+.patterns-expand-btn {
+    position: absolute;
+    top: 50%;
+    right: 10px;
+    transform: translateY(-50%);
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(182, 182, 182, 0.3);
+    border-radius: 8px;
+    padding: 14px 6px;
+    cursor: pointer;
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--text-primary);
+    z-index: 10;
+    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+    writing-mode: vertical-lr;
+    text-orientation: mixed;
+    letter-spacing: 0.8px;
+    line-height: 1.2;
+    min-width: 26px;
+}
+
+.patterns-expand-btn:hover {
+    background: rgba(124, 198, 239, 0.95);
+    border-color: rgba(124, 198, 239, 0.6);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+}
+
+[data-theme="dark"] .patterns-expand-btn {
+    background: rgba(20, 38, 65, 0.92);
+    border-color: rgba(100, 150, 220, 0.25);
+    color: var(--text-primary);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .patterns-expand-btn:hover {
+    background: rgba(30, 55, 95, 0.95);
+    border-color: rgba(100, 150, 220, 0.45);
+}
+
+/* Filter panel expand button (shows in chart header when filter panel collapsed) */
+.filter-expand-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(182, 182, 182, 0.3);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    flex-shrink: 0;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-primary);
+    white-space: nowrap;
+}
+
+.filter-expand-btn:hover {
+    background: rgba(124, 198, 239, 0.95);
+    border-color: var(--accent-aqua, #67e8f9);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+}
+
+[data-theme="dark"] .filter-expand-btn {
+    background: rgba(20, 35, 60, 0.92);
+    border-color: rgba(255, 255, 255, 0.15);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .filter-expand-btn:hover {
+    background: rgba(30, 55, 95, 0.95);
+    border-color: var(--accent-aqua, #67e8f9);
+}
+
+/* Pattern count label in right panel */
+.pattern-count-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0 0 10px 0;
 }
 
 .panel-section {
