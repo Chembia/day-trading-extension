@@ -554,71 +554,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    // ---- Sidebar (Filter Panel) Toggle ----
-    async function loadSidebarPref() {
-        return new Promise((resolve) => {
-            chrome.storage.local.get(['sidebarHidden'], (result) => {
-                resolve(result.sidebarHidden === true);
-            });
-        });
-    }
-
-    async function saveSidebarPref(hidden) {
-        return new Promise((resolve) => {
-            chrome.storage.local.set({ sidebarHidden: hidden }, resolve);
-        });
-    }
-
-    const filterPanelExpandBtn = document.getElementById('filter-panel-expand');
+    // ---- Sidebar (Filter Panel) Toggle (collapse disabled - sidebar is always visible) ----
     const rightPanelExpandBtn = document.getElementById('right-panel-expand-btn');
 
-    function updateSidebarToggleIcon(hidden) {
-        // Update the collapse btn icon inside the filter panel
-        if (patternsListToggle) {
-            patternsListToggle.textContent = hidden ? '▶' : '◀';
-        }
-        // Show/hide the expand button in chart header
-        if (filterPanelExpandBtn) {
-            filterPanelExpandBtn.classList.toggle('hidden', !hidden);
-        }
-    }
-
-    function collapseOrExpandSidebar(forceHide) {
-        const isHidden = forceHide !== undefined
-            ? forceHide
-            : !resultsContainer.classList.contains('sidebar-hidden');
-        if (isHidden) {
-            resultsContainer.classList.add('sidebar-hidden');
-        } else {
-            resultsContainer.classList.remove('sidebar-hidden');
-        }
-        updateSidebarToggleIcon(isHidden);
-        saveSidebarPref(isHidden);
-        setTimeout(() => {
-            if (chart) { chart.resize(); chart.update('none'); }
-        }, PANEL_ANIMATION_DURATION);
-        return isHidden;
-    }
-
-    const sidebarHidden = await loadSidebarPref();
-    if (sidebarHidden) {
-        resultsContainer.classList.add('sidebar-hidden');
-    }
-    updateSidebarToggleIcon(sidebarHidden);
-
-    // Collapse button inside filter panel header
-    if (patternsListToggle) {
-        patternsListToggle.addEventListener('click', async () => {
-            collapseOrExpandSidebar();
-        });
-    }
-
-    // Expand button in chart section header (visible when filter panel is collapsed)
-    if (filterPanelExpandBtn) {
-        filterPanelExpandBtn.addEventListener('click', () => {
-            collapseOrExpandSidebar(false);
-        });
-    }
+    // collapseOrExpandSidebar is a no-op: sidebar is permanently visible and non-collapsible
+    function collapseOrExpandSidebar() { /* no-op */ }
 
     // ---- Right Panel (Patterns) Toggle ----
     function updateRightPanelToggleIcon(hidden) {

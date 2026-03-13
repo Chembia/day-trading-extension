@@ -5,22 +5,8 @@ body {
     min-height: 500px;
     margin: 0;
     padding: 0;
-    background-color: #7cc6ef;
-    background-image: url('../assets/fluey_light-mode_background.jpg');
-    background-size: 110% 110%;
-    background-position: 0% 0%;
-    animation: bgPan 20s ease-in-out infinite alternate;
-}
-
-@keyframes bgPan {
-    0% { background-position: 0% 0%; }
-    100% { background-position: 100% 100%; }
-}
-
-@keyframes darkNavyGradient {
-    0% { background-position: 0% 0%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 100%; }
+    background-color: #f0f1e6;
+    background-image: none;
 }
 
 [data-theme="dark"] body {
@@ -58,9 +44,9 @@ body {
 }
 
 .fluey-brand {
-    font-family: 'Alex Brush', cursive;
+    font-family: 'Chewy', cursive;
     font-size: 34px;
-    letter-spacing: 2px;
+    letter-spacing: 3px;
     margin: 0;
     color: var(--text-primary);
 }
@@ -154,6 +140,46 @@ body {
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border: 1px solid rgba(100, 150, 220, 0.2);
+}
+
+/* Light Mode: cream glass overrides */
+[data-theme="light"] .glass-container {
+    background: rgba(240, 241, 230, 0.6);
+    border-color: rgba(200, 202, 185, 0.55);
+    box-shadow: 0 8px 32px rgba(100, 105, 80, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.65);
+}
+
+[data-theme="light"] .glass-input {
+    background: rgba(240, 241, 230, 0.45);
+    border-color: rgba(160, 162, 140, 0.35);
+}
+
+[data-theme="light"] .glass-input:focus {
+    border-color: rgba(140, 145, 110, 0.6);
+    background: rgba(230, 232, 215, 0.55);
+    box-shadow: 0 0 0 3px rgba(140, 145, 110, 0.15);
+}
+
+[data-theme="light"] .glass-button {
+    background: rgba(30, 30, 30, 0.82);
+    color: #fff;
+    border-color: rgba(0, 0, 0, 0.18);
+}
+
+[data-theme="light"] .glass-button:hover {
+    background: rgba(10, 10, 10, 0.92);
+    border-color: rgba(0, 0, 0, 0.28);
+}
+
+[data-theme="light"] .theme-option {
+    background: rgba(200, 202, 185, 0.3);
+    border-color: rgba(160, 162, 140, 0.35);
+    color: var(--text-primary);
+}
+
+[data-theme="light"] .theme-option.active {
+    background: rgba(140, 145, 110, 0.5);
+    border-color: rgba(120, 125, 90, 0.6);
 }
 
 .info-section {
