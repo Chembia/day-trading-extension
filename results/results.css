@@ -504,7 +504,7 @@ body {
 /* Chart Section */
 .chart-section {
     padding: 24px;
-    border: 2px solid rgba(25, 15, 5, 0.72) !important;
+    border: var(--chart-border-width) solid var(--chart-border-color) !important;
     box-shadow: 0 4px 20px rgba(20, 10, 0, 0.18), 0 8px 32px rgba(180, 210, 255, 0.12),
                 inset 0 1px 0 rgba(255, 255, 255, 0.6) !important;
 }
@@ -858,26 +858,71 @@ body {
     color: #5a3a00;
 }
 
-/* Light mode: dark buttons */
-[data-theme="light"] .glass-button:not(.control-bar .glass-button) {
+/* Light mode: dark buttons (excluding glass-container buttons and action-btn) */
+[data-theme="light"] .glass-button:not(.control-bar .glass-button):not(.action-btn) {
     background: rgba(30, 30, 30, 0.82);
     color: #fff;
     border-color: rgba(0, 0, 0, 0.18);
 }
 
-[data-theme="light"] .glass-button:not(.control-bar .glass-button):hover {
+[data-theme="light"] .glass-button:not(.control-bar .glass-button):not(.action-btn):hover {
     background: rgba(10, 10, 10, 0.92);
     border-color: rgba(0, 0, 0, 0.28);
 }
 
-[data-theme="light"] .glass-button-secondary:not(.control-bar .glass-button) {
+[data-theme="light"] .glass-button-secondary:not(.control-bar .glass-button):not(.action-btn) {
     background: rgba(50, 50, 50, 0.75);
     color: #fff;
     border-color: rgba(0, 0, 0, 0.12);
 }
 
-[data-theme="light"] .glass-button-secondary:not(.control-bar .glass-button):hover {
+[data-theme="light"] .glass-button-secondary:not(.control-bar .glass-button):not(.action-btn):hover {
     background: rgba(30, 30, 30, 0.88);
+}
+
+/* Light mode: glass control pill with dark outline matching chart */
+[data-theme="light"] .control-bar {
+    background: rgba(240, 241, 230, 0.55) !important;
+    border: var(--chart-border-width) solid var(--chart-border-color) !important;
+    box-shadow: 0 4px 24px rgba(20, 15, 5, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.65) !important;
+}
+
+[data-theme="light"] .control-bar .control-group label {
+    color: var(--text-primary) !important;
+}
+
+[data-theme="light"] .control-bar .glass-input {
+    background: rgba(250, 251, 240, 0.45) !important;
+    border-color: rgba(180, 182, 158, 0.4) !important;
+    color: var(--text-primary) !important;
+}
+
+[data-theme="light"] .control-bar .glass-input::placeholder {
+    color: rgba(44, 44, 44, 0.5) !important;
+}
+
+[data-theme="light"] .control-bar .glass-button {
+    background: rgba(240, 241, 230, 0.65) !important;
+    color: var(--text-primary) !important;
+    border: var(--chart-border-width) solid var(--chart-border-color) !important;
+}
+
+[data-theme="light"] .control-bar .glass-button:hover {
+    background: rgba(228, 229, 215, 0.85) !important;
+    transform: translateY(-1px);
+}
+
+/* Light mode: glass action buttons with dark outline matching chart */
+[data-theme="light"] .glass-button.action-btn {
+    background: rgba(240, 241, 230, 0.55) !important;
+    color: var(--text-primary) !important;
+    border: var(--chart-border-width) solid var(--chart-border-color) !important;
+    box-shadow: 0 2px 8px rgba(20, 15, 5, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.65) !important;
+}
+
+[data-theme="light"] .glass-button.action-btn:hover {
+    background: rgba(228, 229, 215, 0.75) !important;
+    transform: translateY(-1px);
 }
 
 /* Dark Mode */
