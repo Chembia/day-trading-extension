@@ -82,7 +82,53 @@ function calculateVisibleAnnotations(chart, allPatterns, stockData) {
         }
     });
 
-    return allPatterns.filter((_, i) => selectedIndices.has(i));
+    const zoomFiltered = allPatterns.filter((_, i) => selectedIndices.has(i));
+    return limitAnnotationsByAnchorCandle(zoomFiltered);
+}
+
+/**
+ * Limit chart annotations so that no anchor candle appears in more than maxPerAnchor
+ * displayed patterns. The anchor candle is the pattern's end/detection candle index
+ * (pattern.index or pattern.endIndex). Patterns are selected by highest confidence;
+ * ties broken by tighter span then deterministic name+index key.
+ *
+ * This is a display-only filter — it does not modify the underlying detected patterns.
+ *
+ * @param {Array} patterns - Array of pattern objects
+ * @param {number} maxPerAnchor - Maximum patterns per anchor candle (default 3)
+ * @returns {Array} Filtered subset of patterns for chart display
+ */
+function limitAnnotationsByAnchorCandle(patterns, maxPerAnchor = 3) {
+    if (!patterns || patterns.length === 0) return patterns;
+
+    // Sort by: 1) confidence desc, 2) span length asc (tighter first), 3) deterministic tiebreaker
+    const sorted = [...patterns].sort((a, b) => {
+        const confDiff = (b.confidence ?? 0) - (a.confidence ?? 0);
+        if (confDiff !== 0) return confDiff;
+
+        const aSpan = a.candles ?? a.length ?? 1;
+        const bSpan = b.candles ?? b.length ?? 1;
+        const spanDiff = aSpan - bSpan;
+        if (spanDiff !== 0) return spanDiff;
+
+        const aKey = `${a.patternName ?? ''}-${a.index ?? a.endIndex ?? 0}`;
+        const bKey = `${b.patternName ?? ''}-${b.index ?? b.endIndex ?? 0}`;
+        return aKey.localeCompare(bKey);
+    });
+
+    const anchorCount = new Map();
+    const selected = [];
+
+    for (const p of sorted) {
+        const anchor = p.index !== undefined ? p.index : (p.endIndex !== undefined ? p.endIndex : 0);
+        const count = anchorCount.get(anchor) ?? 0;
+        if (count < maxPerAnchor) {
+            selected.push(p);
+            anchorCount.set(anchor, count + 1);
+        }
+    }
+
+    return selected;
 }
 
 /**
@@ -198,6 +244,7 @@ function calculateOverlapRatio(start1, end1, start2, end2) {
 // Browser global exports
 if (typeof window !== 'undefined') {
     window.calculateVisibleAnnotations = calculateVisibleAnnotations;
+    window.limitAnnotationsByAnchorCandle = limitAnnotationsByAnchorCandle;
     window.calculateZoomRatio = calculateZoomRatio;
     window.filterNonOverlapping = filterNonOverlapping;
     window.filterWithMinimalOverlap = filterWithMinimalOverlap;
@@ -209,6 +256,7 @@ if (typeof window !== 'undefined') {
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
         calculateVisibleAnnotations,
+        limitAnnotationsByAnchorCandle,
         calculateZoomRatio,
         filterNonOverlapping,
         filterWithMinimalOverlap,
